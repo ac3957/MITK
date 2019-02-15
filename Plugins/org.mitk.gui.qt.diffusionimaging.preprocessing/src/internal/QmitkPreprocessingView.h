@@ -33,6 +33,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImage.h>
 #include "itkDWIVoxelFunctor.h"
 #include <mitkDiffusionPropertyHelper.h>
+#include <vtkMatrix4x4.h>
+#include <vtkSmartPointer.h>
+#include <mitkPeakImage.h>
+#include <mitkImageToItk.h>
 
 typedef short DiffusionPixelType;
 
@@ -61,6 +65,8 @@ class QmitkPreprocessingView : public QmitkAbstractView, public mitk::ILifecycle
   typedef itk::VectorImage< short, 3 >                                    ItkDwiType;
   typedef itk::Image< unsigned char, 3 >                                  UcharImageType;
   typedef itk::Image< double, 3 >                                         ItkDoubleImageType;
+  typedef mitk::DiffusionPropertyHelper                                   PropHelper;
+  typedef mitk::GradientDirectionsProperty                                GradProp;
 
   QmitkPreprocessingView();
   virtual ~QmitkPreprocessingView();
@@ -90,16 +96,12 @@ protected slots:
   void AverageGradients();
   void ExtractB0();
   void MergeDwis();
-  void DoApplySpacing();
-  void DoApplyOrigin();
-  void DoApplyDirectionMatrix();
-  void DoApplyMesurementFrame();
+  void DoApplyHeader();
   void DoReduceGradientDirections();
   void DoShowGradientDirections();
   void DoHalfSphereGradientDirections();
   void UpdateDwiBValueMapRounder(int i);
   void DoLengthCorrection();
-  void DoAdcCalculation();
   void DoDwiNormalization();
   void DoProjectSignal();
   void DoExtractBrainMask();
@@ -111,6 +113,8 @@ protected slots:
   void DoFlipAxis();
   void OnImageSelectionChanged();
   void DoFlipGradientDirections();
+  void DoClearRotationOfGradients();
+  void DoAlignImages();
 
 protected:
 
@@ -126,27 +130,13 @@ protected:
   void TemplatedCropImage( itk::Image<TPixel, VImageDimension>* itkImage);
 
   template < typename TPixel, unsigned int VImageDimension >
-  void TemplatedApplyRotation( itk::Image<TPixel, VImageDimension>* itkImage);
-
-  template < typename TPixel, unsigned int VImageDimension >
-  void TemplatedUpdateGui( itk::Image<TPixel, VImageDimension>* itkImage);
-
-  template < typename TPixel, unsigned int VImageDimension >
-  void TemplatedUpdateGui( itk::VectorImage<TPixel, VImageDimension>* itkImage);
-
-  template < typename TPixel, unsigned int VImageDimension >
   void TemplatedResampleImage( itk::Image<TPixel, VImageDimension>* itkImage);
-
-  template < typename TPixel, unsigned int VImageDimension >
-  void TemplatedSetImageSpacing( itk::Image<TPixel, VImageDimension>* itkImage);
-
-  template < typename TPixel, unsigned int VImageDimension >
-  void TemplatedSetImageOrigin( itk::Image<TPixel, VImageDimension>* itkImage);
 
   /** Called by ExtractB0 if check-box activated, extracts all b0 images without averaging */
   void DoExtractBOWithoutAveraging();
 
   void UpdateBValueTableWidget(int);
+  void UpdateGradientDetails();
 
   /// \brief called by QmitkAbstractView when DataManager's selection has changed
   virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;

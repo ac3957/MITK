@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkBasePropertySerializer.h"
 #include "mitkLevelWindowProperty.h"
-#include <boost/lexical_cast.hpp>
+#include <mitkLexicalCast.h>
 #include <mitkLocaleSwitch.h>
 
 namespace mitk
@@ -30,7 +30,7 @@ namespace mitk
     mitkClassMacro(LevelWindowPropertySerializer, BasePropertySerializer);
     itkFactorylessNewMacro(Self) itkCloneMacro(Self)
 
-      virtual TiXmlElement *Serialize() override
+      TiXmlElement *Serialize() override
     {
       if (const LevelWindowProperty *prop = dynamic_cast<const LevelWindowProperty *>(m_Property.GetPointer()))
       {
@@ -70,7 +70,7 @@ namespace mitk
         return nullptr;
     }
 
-    virtual BaseProperty::Pointer Deserialize(TiXmlElement *element) override
+    BaseProperty::Pointer Deserialize(TiXmlElement *element) override
     {
       if (!element)
         return nullptr;
@@ -128,7 +128,7 @@ namespace mitk
 
   protected:
     LevelWindowPropertySerializer() {}
-    virtual ~LevelWindowPropertySerializer() {}
+    ~LevelWindowPropertySerializer() override {}
   };
 
 } // namespace

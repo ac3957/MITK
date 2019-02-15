@@ -1,5 +1,5 @@
 MITK_CREATE_MODULE(DEPENDS MitkDataTypesExt MitkLegacyGL
-                   WARNINGS_AS_ERRORS
+                   PACKAGE_DEPENDS OpenMP|OpenMP_CXX
                   )
 
 add_subdirectory(test)

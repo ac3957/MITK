@@ -31,6 +31,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkDiffusionPropertyHelper.h>
 #include "itkDiffusionIntravoxelIncoherentMotionReconstructionImageFilter.h"
 #include "itkDiffusionKurtosisReconstructionImageFilter.h"
+#include <QmitkSliceNavigationListener.h>
 
 /*!
   \brief QmitkIVIMView
@@ -38,7 +39,7 @@ See LICENSE.txt or http://www.mitk.org for details.
   \warning  This application module is not yet documented. Use "svn blame/praise/annotate" and ask the author to provide basic documentation.
 */
 
-class QmitkIVIMView : public QmitkAbstractView, public mitk::ILifecycleAwarePart,  public mitk::IRenderWindowPartListener
+class QmitkIVIMView : public QmitkAbstractView, public mitk::ILifecycleAwarePart
 {
   // this is needed for all Qt objects that should have a Qt meta-object
   // (everything that derives from QObject and wants to have signal/slots)
@@ -65,11 +66,7 @@ public:
   ///
   virtual void SetFocus() override;
 
-  virtual void RenderWindowPartActivated(mitk::IRenderWindowPart* renderWindowPart) override;
-  virtual void RenderWindowPartDeactivated(mitk::IRenderWindowPart* renderWindowPart) override;
-
-  void OnSliceChanged(const itk::EventObject& e);
-  void OutputToDatastorage(const QList<mitk::DataNode::Pointer>& nodes);
+  void OutputToDatastorage(mitk::DataNode::Pointer node);
   bool FittIVIM(itk::VectorImage<short,3>* vecimg, DirContainerType* dirs, float bval, bool multivoxel, OutImgType::IndexType &crosspos);
 
   void Activated() override;
@@ -78,6 +75,8 @@ public:
   void Hidden() override;
 
 protected slots:
+
+  void OnSliceChanged();
 
   /// \brief Called when the user clicks the GUI button
   void FittIVIMStart();
@@ -96,6 +95,7 @@ protected slots:
   void ClipboardCurveButtonClicked();
 
   void OnKurtosisParamsChanged();
+  void UpdateGui();
 
 protected:
 
@@ -106,10 +106,6 @@ protected:
 
   Ui::QmitkIVIMViewControls* m_Controls;
 
-  int m_SliceObserverTag1;
-  int m_SliceObserverTag2;
-  int m_SliceObserverTag3;
-
   OutImgType::Pointer m_DStarMap;
   OutImgType::Pointer m_DMap;
   OutImgType::Pointer m_fMap;
@@ -117,13 +113,11 @@ protected:
   IVIMFilterType::IVIMSnapshot m_Snap;
   KurtosisFilterType::KurtosisSnapshot m_KurtosisSnap;
 
-  mitk::DataNode::Pointer m_DiffusionImageNode;
-  mitk::DataNode::Pointer m_MaskImageNode;
-
   bool m_Active;
   bool m_Visible;
 
   bool m_HoldUpdate;
+  QmitkSliceNavigationListener  m_SliceChangeListener;
 
 };
 

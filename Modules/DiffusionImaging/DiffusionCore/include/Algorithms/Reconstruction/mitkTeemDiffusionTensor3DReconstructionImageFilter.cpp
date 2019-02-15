@@ -25,6 +25,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "itkImageRegionIterator.h"
 #include "itkImageFileReader.h"
 #include <mitkIOUtil.h>
+#include <mitkLocaleSwitch.h>
+#include <itkMersenneTwisterRandomVariateGenerator.h>
 
 template< class D, class T >
 mitk::TeemDiffusionTensor3DReconstructionImageFilter<D,T>
@@ -84,11 +86,12 @@ void
 mitk::TeemDiffusionTensor3DReconstructionImageFilter<D,T>
 ::Update()
 {
+  itk::Statistics::MersenneTwisterRandomVariateGenerator::Pointer randgen = itk::Statistics::MersenneTwisterRandomVariateGenerator::New();
+  randgen->SetSeed();
 
   // save input image to nrrd file in temp-folder
   char filename[512];
-  srand((unsigned)time(0));
-  int random_integer = rand();
+  int random_integer = randgen->GetIntegerVariate();
   sprintf( filename, "dwi_%d.nhdr",random_integer);
 
   try
@@ -160,6 +163,7 @@ mitk::TeemDiffusionTensor3DReconstructionImageFilter<D,T>
   sprintf( filename, "tensors_%d.nhdr", random_integer);
   file_replace(filename,"3D-masked-symmetric-matrix","vector");
 
+  mitk::LocaleSwitch localeSwitch("C");
   // read result as mitk::Image and provide it in m_Output
   typedef itk::ImageFileReader<VectorImageType> FileReaderType;
   typename FileReaderType::Pointer reader = FileReaderType::New();

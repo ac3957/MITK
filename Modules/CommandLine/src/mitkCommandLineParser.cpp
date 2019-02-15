@@ -261,6 +261,60 @@ namespace
     {
       text = text + ", (default: " + this->DefaultValue.ToString() + ")";
     }
+    string value_type = "Unknown";
+    switch (this->ValueType)
+    {
+    case 0:
+    {
+      value_type = "String";
+      break;
+    }
+    case 1:
+    {
+      value_type = "Bool";
+      break;
+    }
+    case 2:
+    {
+      value_type = "StringList";
+      break;
+    }
+    case 3:
+    {
+      value_type = "Int";
+      break;
+    }
+    case 4:
+    {
+      value_type = "Float";
+      break;
+    }
+    case 5:
+    {
+      value_type = "InputDirectory";
+      break;
+    }
+    case 6:
+    {
+      value_type = "InputFile";
+      break;
+    }
+    case 7:
+    {
+      value_type = "OutputDirectory";
+      break;
+    }
+    case 8:
+    {
+      value_type = "OutputFile";
+      break;
+    }
+    case 9:
+    {
+      value_type = "InputImage";
+    }
+    }
+    text = text + ", Type: " + value_type;
     text += "\n";
     return text;
   }
@@ -380,6 +434,12 @@ map<string, us::Any> mitkCommandLineParser::parseArguments(const StringContainer
     {
       std::cout << "Processing" << argument;
     }
+    if (!argument.compare("--version"))
+    {
+      std::cout << "Git commit hash: " << MITK_REVISION << std::endl;
+      std::cout << "Git branch name: " << MITK_REVISION_NAME << std::endl;
+    }
+
     if (!argument.compare("--xml") || !argument.compare("-xml") || !argument.compare("--XML") ||
         !argument.compare("-XML"))
     {
@@ -639,6 +699,7 @@ map<string, us::Any> mitkCommandLineParser::parseArguments(const StringContainer
 // -------------------------------------------------------------------------
 map<string, us::Any> mitkCommandLineParser::parseArguments(int argc, char **argv, bool *ok)
 {
+  std::cout << "Running Command Line Utility *" << Title << "*" << std::endl;
   StringContainerType arguments;
 
   // Create a StringContainerType of arguments
@@ -736,6 +797,36 @@ void mitkCommandLineParser::addDeprecatedArgument(const string &longarg,
 }
 
 // --------------------------------------------------------------------------
+std::vector < std::map<std::string, us::Any> > mitkCommandLineParser::getArgumentList()
+{
+  std::vector < std::map<std::string, us::Any> > parameterList;
+  //for (CommandLineParserArgumentDescription* argument : this->Internal->ArgumentDescriptionList)
+  for (std::size_t i = 0; i< this->Internal->ArgumentDescriptionList.size(); ++i)
+  {
+    CommandLineParserArgumentDescription* argument = this->Internal->ArgumentDescriptionList[i];
+    std::map<std::string, us::Any> tmpMap;
+    //tmpMap["helptext"] = us::Any(argument->helpText);
+    tmpMap["longarg"] = us::Any(argument->LongArg);
+    tmpMap["longargprefix"] = us::Any(argument->LongArgPrefix);
+    tmpMap["shortarg"] = us::Any(argument->ShortArg);
+    tmpMap["shortargprefix"] = us::Any(argument->ShortArgPrefix);
+    tmpMap["arghelp"] = us::Any(argument->ArgHelp);
+    tmpMap["arglabel"] = us::Any(argument->ArgLabel);
+    tmpMap["arggroup"] = us::Any(argument->ArgGroup);
+    tmpMap["arggroupdescription"] = us::Any(argument->ArgGroupDescription);
+    tmpMap["ignorerest"] = us::Any(argument->IgnoreRest);
+    tmpMap["numberofparameterstoprocess"] = us::Any(argument->NumberOfParametersToProcess);
+    tmpMap["deprecated"] = us::Any(argument->Deprecated);
+    tmpMap["optional"] = us::Any(argument->Optional);
+    tmpMap["defaultvalue"] = argument->DefaultValue;
+    tmpMap["value"] = argument->Value;
+    tmpMap["valuetype"] = us::Any(argument->ValueType);
+    parameterList.push_back(tmpMap);
+  }
+  return parameterList;
+}
+
+// --------------------------------------------------------------------------
 std::string::size_type mitkCommandLineParser::fieldWidth() const
 {
   return this->Internal->FieldWidth;
@@ -763,6 +854,7 @@ string mitkCommandLineParser::helpText() const
   text += Description + "\n";
   text += Contributor + "\n\n";
   text += "Use --xml to generate an XML description parsable as a CTK Command Line Module Plugin.\n";
+  text += "Use --version to print MITK revision information.\n";
 
   // Loop over grouped argument descriptions
   map<string, vector<CommandLineParserArgumentDescription *>>::iterator it;
@@ -831,6 +923,7 @@ void mitkCommandLineParser::setStrictModeEnabled(bool strictMode)
 {
   this->Internal->StrictMode = strictMode;
 }
+
 
 void mitkCommandLineParser::generateXmlOutput()
 {

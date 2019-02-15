@@ -26,7 +26,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkMovieGenerator.h"
 #include "itkCommand.h"
 
-#include "QVTKWidget.h"
 #include "vtkEventQtSlotConnect.h"
 #include "vtkRenderWindow.h"
 #include "mitkVtkPropRenderer.h"
@@ -91,16 +90,12 @@ protected slots:
   void GenerateMultiplanarScreenshots();
   void Generate3DHighresScreenshot();
   void GenerateMultiplanar3DHighresScreenshot();
-  void View1();
-  void View2();
-  void View3();
   void SelectBackgroundColor();
 
 protected:
 
   QObject *parentWidget;
   QWidget* m_Parent;
-  QVTKWidget * widget;
   vtkEventQtSlotConnect * connections;
   vtkRenderWindow * renderWindow;
   mitk::VtkPropRenderer::Pointer m_PropRenderer;
@@ -114,6 +109,9 @@ private:
   vtkCamera* GetCam();
   void GenerateHR3DAtlasScreenshots(QString fileName, QString filter = "");
   void GenerateMultiplanarScreenshots(QString fileName);
+
+  mitk::DataNode::Pointer GetTopLayerNode();
+  void MultichannelScreenshot(mitk::VtkPropRenderer* renderer, QString fileName, QString filter);
 
   /*!
   \brief taking a screenshot "from" the specified renderer

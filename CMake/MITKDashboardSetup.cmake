@@ -9,11 +9,12 @@ set(MY_OPERATING_SYSTEM )
 
 if(UNIX)
   # Download a utility script
-  if(IS_PHABRICATOR_URL)
-    set(url "https://phabricator.mitk.org/source/mitk/browse/${GIT_BRANCH}/CMake/mitkDetectOS.sh?view=raw")
-  else()
+  # See T24757.
+  # if(IS_PHABRICATOR_URL)
+  #   set(url "https://phabricator.mitk.org/source/mitk/browse/${GIT_BRANCH}/CMake/mitkDetectOS.sh?view=raw")
+  # else()
     set(url "https://raw.githubusercontent.com/MITK/MITK/master/CMake/mitkDetectOS.sh")
-  endif()
+  # endif()
   set(dest "${CTEST_SCRIPT_DIRECTORY}/mitkDetectOS.sh")
   downloadFile("${url}" "${dest}")
   execute_process(COMMAND sh "${dest}"
@@ -75,13 +76,13 @@ if(WIN32)
 
   set(OPENCV_BIN_DIR "${CTEST_BINARY_DIRECTORY}/ep/${CMAKE_LIBRARY_ARCHITECTURE}/vc${vc_version}/bin")
 
-  set(SOFA_BINARY_DIR "${CTEST_BINARY_DIRECTORY}/ep/src/SOFA-build/bin/${CTEST_BUILD_CONFIGURATION}")
   set(BLUEBERRY_RUNTIME_DIR "${CTEST_BINARY_DIRECTORY}/MITK-build/bin/plugins/${CTEST_BUILD_CONFIGURATION}")
 
   set(PYTHON_BINARY_DIRS "${CTEST_BINARY_DIRECTORY}/ep/src/CTK-build/CMakeExternals/Install/bin")
-  list(APPEND PYTHON_BINARY_DIRS "${CTEST_BINARY_DIRECTORY}/ep/lib/python2.7/bin")
+  get_filename_component(_python_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
+  list(APPEND PYTHON_BINARY_DIRS "${_python_dir}")
 
-  set(CTEST_PATH "${CTEST_PATH};${CTEST_BINARY_DIRECTORY}/ep/bin;${QT_BINARY_DIR};${SOFA_BINARY_DIR};${BLUEBERRY_RUNTIME_DIR};${OPENCV_BIN_DIR};${PYTHON_BINARY_DIRS}")
+  set(CTEST_PATH "${CTEST_PATH};${CTEST_BINARY_DIRECTORY}/ep/bin;${QT_BINARY_DIR};${BLUEBERRY_RUNTIME_DIR};${OPENCV_BIN_DIR};${PYTHON_BINARY_DIRS}")
 endif()
 set(ENV{PATH} "${CTEST_PATH}")
 
@@ -150,12 +151,11 @@ endif()
 # Download and include dashboard driver script
 #
 if(IS_PHABRICATOR_URL)
-  set(url "https://phabricator.mitk.org/source/mitk/browse/${GIT_BRANCH}/CMake/MITKDashboardDriverScript.cmake?view=raw")
+  string(REPLACE "/" "%252F" GIT_BRANCH_URL ${GIT_BRANCH})
+  set(url "https://phabricator.mitk.org/source/mitk/browse/${GIT_BRANCH_URL}/CMake/MITKDashboardDriverScript.cmake?view=raw")
 else()
   set(url "https://raw.githubusercontent.com/MITK/MITK/master/CMake/MITKDashboardDriverScript.cmake")
 endif()
 set(dest ${CTEST_SCRIPT_DIRECTORY}/${CTEST_SCRIPT_NAME}.driver)
 downloadFile("${url}" "${dest}")
 include(${dest})
-
-

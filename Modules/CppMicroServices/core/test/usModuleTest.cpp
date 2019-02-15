@@ -90,7 +90,7 @@ void frame02a()
 #endif
 
   Module* moduleA = ModuleRegistry::GetModule("TestModuleA");
-  US_TEST_CONDITION_REQUIRED(moduleA != 0, "Test for existing module TestModuleA")
+  US_TEST_CONDITION_REQUIRED(moduleA != nullptr, "Test for existing module TestModuleA")
 
   std::vector<ModuleEvent> pEvts;
 #ifdef US_BUILD_SHARED_LIBS
@@ -181,7 +181,7 @@ void frame020a(ModuleContext* mc, TestModuleListener& listener,
   US_TEST_CONDITION(ModuleSettings::GetStoragePath() == "/tmp", "Test for valid base storage path")
 
   Module* moduleA = ModuleRegistry::GetModule("TestModuleA");
-  US_TEST_CONDITION_REQUIRED(moduleA != 0, "Test for existing module TestModuleA")
+  US_TEST_CONDITION_REQUIRED(moduleA != nullptr, "Test for existing module TestModuleA")
 
   US_TEST_CONDITION(moduleA->GetName() == "TestModuleA", "Test module name")
 
@@ -203,7 +203,7 @@ void frame020a(ModuleContext* mc, TestModuleListener& listener,
     {
       US_TEST_CONDITION(mc->UngetService(sr1), "Test if Service UnGet returns true");
     }
-    catch (const std::logic_error le)
+    catch (const std::logic_error& le)
     {
       US_TEST_FAILED_MSG(<< "UnGetService exception: " << le.what())
     }
@@ -236,7 +236,7 @@ void frame020a(ModuleContext* mc, TestModuleListener& listener,
 void frame030b(ModuleContext* mc, TestModuleListener& listener, SharedLibrary& libA)
 {
   Module* moduleA = ModuleRegistry::GetModule("TestModuleA");
-  US_TEST_CONDITION_REQUIRED(moduleA != 0, "Test for non-null module")
+  US_TEST_CONDITION_REQUIRED(moduleA != nullptr, "Test for non-null module")
 
   ServiceReferenceU sr1
       = mc->GetServiceReference("us::TestModuleAService");

@@ -75,12 +75,12 @@ protected:
    * this function is overridden as protected, so that the user may not add
    * additional invalid interpolation types.
    */
-  virtual bool AddEnum( const std::string& name, const IdType& id );
+  bool AddEnum( const std::string& name, const IdType& id ) override;
 
   /**
    * Adds the enumeration types
    */
-  virtual void AddTypes();
+  void AddTypes();
 
 private:
 

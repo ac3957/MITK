@@ -295,7 +295,7 @@ vtkMitkOpenGLVolumeTextureMapper3D::vtkMitkOpenGLVolumeTextureMapper3D()
   this->Volume3Index = 0;
   this->ColorLookupIndex = 0;
   this->AlphaLookupIndex = 0;
-  this->RenderWindow = NULL;
+  this->RenderWindow = nullptr;
   this->SupportsCompressedTexture = false;
 
   prgOneComponentShade = 0;
@@ -333,7 +333,7 @@ void vtkMitkOpenGLVolumeTextureMapper3D::ReleaseGraphicsResources(vtkWindow *ren
   this->Volume2Index = 0;
   this->Volume3Index = 0;
   this->ColorLookupIndex = 0;
-  this->RenderWindow = NULL;
+  this->RenderWindow = nullptr;
   this->SupportsCompressedTexture = false;
   this->SupportsNonPowerOfTwoTextures = false;
 
@@ -363,7 +363,7 @@ void vtkMitkOpenGLVolumeTextureMapper3D::ReleaseGraphicsResources(mitk::BaseRend
   this->Volume2Index = 0;
   this->Volume3Index = 0;
   this->ColorLookupIndex = 0;
-  this->RenderWindow = NULL;
+  this->RenderWindow = nullptr;
   this->SupportsCompressedTexture = false;
   this->SupportsNonPowerOfTwoTextures = false;
 
@@ -770,6 +770,9 @@ public:
     sizeZm1 = sizeZ - 1;
 
     fullXY = fullX * fullY;
+    currentChunkStart = 0;
+    currentChunkEnd = 0;
+    offZ = 0;
   }
 
   inline float sample(int x, int y, int z) { return float(dataPtr[x + y * sizeX + z * sizeXY]); }
@@ -1172,6 +1175,7 @@ public:
     sizeZm1 = sizeZ - 1;
 
     fullXY = fullX * fullY;
+    offZ = 0;
   }
 
   inline int sample(int x, int y, int z) { return dataPtr[(x + y * sizeX + z * sizeXY) * 4 + 3]; }
@@ -1997,7 +2001,7 @@ void vtkMitkOpenGLVolumeTextureMapper3D::GetLightInformation(vtkRenderer *ren,
     float dir[3] = {0, 0, 0};
     float half[3] = {0, 0, 0};
 
-    if (light[lightIndex] == NULL || light[lightIndex]->GetSwitch() == 0)
+    if (light[lightIndex] == nullptr || light[lightIndex]->GetSwitch() == 0)
     {
       lightDiffuseColor[lightIndex][0] = 0.0;
       lightDiffuseColor[lightIndex][1] = 0.0;
@@ -2122,7 +2126,7 @@ void vtkMitkOpenGLVolumeTextureMapper3D::SetupProgramLocalsForShadingFP(vtkRende
     float dir[3] = {0, 0, 0};
     float half[3] = {0, 0, 0};
 
-    if (light[lightIndex] == NULL || light[lightIndex]->GetSwitch() == 0)
+    if (light[lightIndex] == nullptr || light[lightIndex]->GetSwitch() == 0)
     {
       lightDiffuseColor[lightIndex][0] = 0.0;
       lightDiffuseColor[lightIndex][1] = 0.0;
@@ -2252,7 +2256,7 @@ void vtkMitkOpenGLVolumeTextureMapper3D::Initialize(vtkRenderer *renderer)
 
   this->Initialized = 1;
   // vtkOpenGLExtensionManager * extensions = vtkOpenGLExtensionManager::New();
-  // extensions->SetRenderWindow(NULL); // set render window to the current one.
+  // extensions->SetRenderWindow(nullptr); // set render window to the current one.
   vtkOpenGLExtensionManager *extensions =
     static_cast<vtkOpenGLRenderWindow *>(renderer->GetRenderWindow())->GetExtensionManager();
 
@@ -2375,7 +2379,7 @@ void vtkMitkOpenGLVolumeTextureMapper3D::Initialize(vtkRenderer *renderer)
 void vtkMitkOpenGLVolumeTextureMapper3D::PrintSelf(ostream &os, vtkIndent indent)
 {
   // vtkOpenGLExtensionManager * extensions = vtkOpenGLExtensionManager::New();
-  // extensions->SetRenderWindow(NULL); // set render window to current render window
+  // extensions->SetRenderWindow(nullptr); // set render window to current render window
 
   os << indent << "Initialized " << this->Initialized << endl;
   /* if ( this->Initialized )

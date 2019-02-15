@@ -13,7 +13,9 @@
  See LICENSE.txt or http://www.mitk.org for details.
 
  ===================================================================*/
-#pragma warning(disable : 4996)
+#ifdef _MSC_VER
+#  pragma warning(disable : 4996)
+#endif
 
 #include "mitkTestFixture.h"
 #include "mitkTestingMacros.h"
@@ -47,8 +49,8 @@ public:
    * @brief Setup - Always call this method before each Test-case to ensure correct and new intialization of the used
    * members for a new test case. (If the members are not used in a test, the method does not need to be called).
    */
-  void setUp() {}
-  void tearDown() {}
+  void setUp() override {}
+  void tearDown() override {}
   void TestClassification()
   {
     size_t forestSize = 10;
@@ -80,7 +82,7 @@ public:
 
     progression.PredictInvasion(evaluation, modalities);
 
-    mitk::Image::Pointer refImage = mitk::IOUtil::LoadImage(
+    auto refImage = mitk::IOUtil::Load<mitk::Image>(
       GetTestDataFilePath("DiffusionImaging/ProgressionAnalysis/Classification/TESTING_RESULT.nrrd"));
 
     mitk::DataCollection *patCol = dynamic_cast<mitk::DataCollection *>(evaluation->GetData(0).GetPointer());

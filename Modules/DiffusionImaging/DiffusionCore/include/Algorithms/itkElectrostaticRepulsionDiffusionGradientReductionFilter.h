@@ -85,6 +85,7 @@ namespace itk
 
     itkGetMacro(GradientDirections, GradientDirectionContainerType::Pointer)
     itkSetMacro(GradientDirections, GradientDirectionContainerType::Pointer)
+    itkSetMacro(UseFirstN, bool)
 
     IndicesVector GetUsedGradientIndices(){return m_UsedGradientIndices;}
     void SetOriginalBValueMap(BValueMap inp){m_OriginalBValueMap = inp;}
@@ -92,13 +93,13 @@ namespace itk
     void SetNumGradientDirections(std::vector<unsigned int> numDirs){m_NumGradientDirections = numDirs;}
 
 
-    void UpdateOutputInformation();
+    void UpdateOutputInformation() override;
 
   protected:
     ElectrostaticRepulsionDiffusionGradientReductionFilter();
-    ~ElectrostaticRepulsionDiffusionGradientReductionFilter() {}
+    ~ElectrostaticRepulsionDiffusionGradientReductionFilter() override {}
 
-    void GenerateData();
+    void GenerateData() override;
     double Costs(); ///< calculates electrostatic energy of current direction set
 
     GradientDirectionContainerType::Pointer m_GradientDirections;   ///< container for the subsampled output gradient directions
@@ -110,6 +111,7 @@ namespace itk
 
     BValueMap m_OriginalBValueMap;
     BValueMap m_InputBValueMap;
+    bool      m_UseFirstN;
 
     std::vector<unsigned int> m_NumGradientDirections;
   };

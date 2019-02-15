@@ -27,7 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkIOUtil.h>
 
 //std headers
-#include <stdio.h>
+#include <cstdio>
 
 mitk::NavigationToolWriter::NavigationToolWriter()
   {
@@ -55,8 +55,8 @@ bool mitk::NavigationToolWriter::DoWrite(std::string FileName,mitk::NavigationTo
   // this bug, the geometry is set to identity for the saving progress and restored later.
   mitk::BaseGeometry::Pointer geometryBackup;
   if (  Tool->GetDataNode().IsNotNull()
-        && (Tool->GetDataNode()->GetData()!=NULL)
-        && (Tool->GetDataNode()->GetData()->GetGeometry()!=NULL)
+        && (Tool->GetDataNode()->GetData()!=nullptr)
+        && (Tool->GetDataNode()->GetData()->GetGeometry()!=nullptr)
         )
       {
       geometryBackup = Tool->GetDataNode()->GetData()->GetGeometry()->Clone();
@@ -101,37 +101,37 @@ bool mitk::NavigationToolWriter::DoWrite(std::string FileName,mitk::NavigationTo
 
 mitk::DataNode::Pointer mitk::NavigationToolWriter::ConvertToDataNode(mitk::NavigationTool::Pointer Tool)
   {
-  mitk::DataNode::Pointer thisTool = mitk::DataNode::New();
+    mitk::DataNode::Pointer thisTool = Tool->GetDataNode();
   //Name
-    if (Tool->GetDataNode().IsNull()) thisTool->SetName("none");
-    else thisTool->SetName(Tool->GetDataNode()->GetName().c_str());
+    if (Tool->GetDataNode().IsNull())
+    {
+      thisTool = mitk::DataNode::New();
+      thisTool->SetName("none");
+    }
+    
   //Identifier
-    thisTool->AddProperty("identifier",mitk::StringProperty::New(Tool->GetIdentifier().c_str()));
+    thisTool->AddProperty("identifier",mitk::StringProperty::New(Tool->GetIdentifier().c_str()), NULL, true);
   //Serial Number
-    thisTool->AddProperty("serial number",mitk::StringProperty::New(Tool->GetSerialNumber().c_str()));
+    thisTool->AddProperty("serial number",mitk::StringProperty::New(Tool->GetSerialNumber().c_str()), NULL, true);
   //Tracking Device
-    thisTool->AddProperty("tracking device type",mitk::StringProperty::New(Tool->GetTrackingDeviceType()));
+    thisTool->AddProperty("tracking device type",mitk::StringProperty::New(Tool->GetTrackingDeviceType()), NULL, true);
   //Tool Type
-    thisTool->AddProperty("tracking tool type",mitk::IntProperty::New(Tool->GetType()));
+    thisTool->AddProperty("tracking tool type",mitk::IntProperty::New(Tool->GetType()), NULL, true);
   //Calibration File Name
-    thisTool->AddProperty("toolfileName",mitk::StringProperty::New(GetFileWithoutPath(Tool->GetCalibrationFile())));
-  //Surface
-    if (Tool->GetDataNode().IsNotNull()) if (Tool->GetDataNode()->GetData()!=NULL) thisTool->SetData(Tool->GetDataNode()->GetData());
-
+    thisTool->AddProperty("toolfileName",mitk::StringProperty::New(GetFileWithoutPath(Tool->GetCalibrationFile())), NULL, true);
   //Tool Landmarks
-    thisTool->AddProperty("ToolRegistrationLandmarks",mitk::StringProperty::New(ConvertPointSetToString(Tool->GetToolRegistrationLandmarks())));
-    thisTool->AddProperty("ToolCalibrationLandmarks",mitk::StringProperty::New(ConvertPointSetToString(Tool->GetToolCalibrationLandmarks())));
+    thisTool->AddProperty("ToolRegistrationLandmarks",mitk::StringProperty::New(ConvertPointSetToString(Tool->GetToolLandmarks())), NULL, true);
+    thisTool->AddProperty("ToolCalibrationLandmarks",mitk::StringProperty::New(ConvertPointSetToString(Tool->GetToolControlPoints())), NULL, true);
 
   //Tool Tip
     if (Tool->IsToolTipSet())
     {
-      thisTool->AddProperty("ToolTipPosition",mitk::StringProperty::New(ConvertPointToString(Tool->GetToolTipPosition())));
-      thisTool->AddProperty("ToolTipOrientation",mitk::StringProperty::New(ConvertQuaternionToString(Tool->GetToolTipOrientation())));
+      thisTool->AddProperty("ToolTipPosition",mitk::StringProperty::New(ConvertPointToString(Tool->GetToolTipPosition())), NULL, true);
+      thisTool->AddProperty("ToolAxisOrientation",mitk::StringProperty::New(ConvertQuaternionToString(Tool->GetToolAxisOrientation())), NULL, true);
     }
 
   //Material is not needed, to avoid errors in scene serialization we have to do this:
-    thisTool->ReplaceProperty("material",NULL);
-
+    thisTool->RemoveProperty("material");
 
   return thisTool;
   }

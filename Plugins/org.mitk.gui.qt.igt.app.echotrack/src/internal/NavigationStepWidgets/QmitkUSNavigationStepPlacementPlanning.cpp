@@ -26,7 +26,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "../Filter/mitkUSNavigationTargetIntersectionFilter.h"
 #include "../Filter/mitkUSNavigationTargetUpdateFilter.h"
 
-#include "../USNavigationMarkerPlacement.h"
+#include "../QmitkUSNavigationMarkerPlacement.h"
 
 #include "mitkLookupTableProperty.h"
 #include "mitkSurface.h"
@@ -42,7 +42,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "vtkSmartPointer.h"
 
 #include "vtkLineSource.h"
-#include "vtkSphereSource.h"
+#include <vtkSphereSource.h>
 
 #include "vtkCenterOfMass.h"
 #include "vtkLinearTransform.h"
@@ -63,9 +63,9 @@ QmitkUSNavigationStepPlacementPlanning::QmitkUSNavigationStepPlacementPlanning(Q
     m_NeedleProjectionFilter(mitk::NeedleProjectionFilter::New()),
     m_TargetIntersectionFilter(mitk::USNavigationTargetIntersectionFilter::New()),
     m_PlacementQualityCalculator(mitk::USTargetPlacementQualityCalculator::New()),
-    m_ListenerTargetCoordinatesChanged(this, &QmitkUSNavigationStepPlacementPlanning::UpdateTargetCoordinates),
     m_ReferenceSensorIndex(1),
     m_NeedleSensorIndex(0),
+    m_ListenerTargetCoordinatesChanged(this, &QmitkUSNavigationStepPlacementPlanning::UpdateTargetCoordinates),
     ui(new Ui::QmitkUSNavigationStepPlacementPlanning)
 {
   ui->setupUi(this);
@@ -91,9 +91,9 @@ bool QmitkUSNavigationStepPlacementPlanning::OnStartStep()
   node->SetBoolProperty("show contour", true);
 
   // make sure that the targets node exist in the data storage
-  this->GetNamedDerivedNodeAndCreate(USNavigationMarkerPlacement::DATANAME_TARGETS,
+  this->GetNamedDerivedNodeAndCreate(QmitkUSNavigationMarkerPlacement::DATANAME_TARGETS,
                                      QmitkUSAbstractNavigationStep::DATANAME_BASENODE);
-  this->GetNamedDerivedNodeAndCreate(USNavigationMarkerPlacement::DATANAME_TARGETS_PATHS,
+  this->GetNamedDerivedNodeAndCreate(QmitkUSNavigationMarkerPlacement::DATANAME_TARGETS_PATHS,
                                      QmitkUSAbstractNavigationStep::DATANAME_BASENODE);
 
   // listen to event of point mark interactor
@@ -131,7 +131,7 @@ bool QmitkUSNavigationStepPlacementPlanning::OnStopStep()
   m_PlannedNeedlePaths.clear();
 
   // remove the targets node from the data storage
-  mitk::DataNode::Pointer targetsNode = this->GetNamedDerivedNode(USNavigationMarkerPlacement::DATANAME_TARGETS,
+  mitk::DataNode::Pointer targetsNode = this->GetNamedDerivedNode(QmitkUSNavigationMarkerPlacement::DATANAME_TARGETS,
                                                                   QmitkUSAbstractNavigationStep::DATANAME_BASENODE);
   if (targetsNode.IsNotNull())
   {
@@ -140,7 +140,7 @@ bool QmitkUSNavigationStepPlacementPlanning::OnStopStep()
 
   // remove the target paths node from the data storage
   mitk::DataNode::Pointer targetPathsNode = this->GetNamedDerivedNode(
-    USNavigationMarkerPlacement::DATANAME_TARGETS_PATHS, QmitkUSAbstractNavigationStep::DATANAME_BASENODE);
+    QmitkUSNavigationMarkerPlacement::DATANAME_TARGETS_PATHS, QmitkUSAbstractNavigationStep::DATANAME_BASENODE);
   if (targetPathsNode.IsNotNull())
   {
     dataStorage->Remove(targetPathsNode);
@@ -215,8 +215,8 @@ bool QmitkUSNavigationStepPlacementPlanning::OnActivateStep()
     m_CurrentTargetIndex = m_PlannedTargetNodes.size() - 1;
   }
 
-  m_TargetNode = this->GetNamedDerivedNode(USNavigationMarkerPlacement::DATANAME_TARGETSURFACE,
-                                           USNavigationMarkerPlacement::DATANAME_TUMOUR);
+  m_TargetNode = this->GetNamedDerivedNode(QmitkUSNavigationMarkerPlacement::DATANAME_TARGETSURFACE,
+                                           QmitkUSNavigationMarkerPlacement::DATANAME_TUMOUR);
   m_TargetNode->SetBoolProperty("visible", true);
 
   // set lookup table of tumour node
@@ -460,7 +460,7 @@ void QmitkUSNavigationStepPlacementPlanning::OnRemoveCurrentTargetClicked()
   m_PlannedNeedlePaths.remove(m_CurrentTargetIndex);
   this->ReinitNodeDisplacementFilter();
 
-  for (unsigned int n = 0; n < m_PlannedTargetNodes.size(); ++n)
+  for (int n = 0; n < m_PlannedTargetNodes.size(); ++n)
   {
     // set name of the target node according to its new index
     m_PlannedTargetNodes.at(n)->SetName(
@@ -490,7 +490,7 @@ void QmitkUSNavigationStepPlacementPlanning::CreateTargetNodesIfNecessary()
       QString("%1").arg(m_PlannedTargetNodes.size() + 1, m_NumberOfTargets / 10 + 1, 10, QLatin1Char('0'));
 
     mitk::DataNode::Pointer targetNode = this->GetNamedDerivedNodeAndCreate(
-      (QString("Target ") + targetNumber).toStdString().c_str(), USNavigationMarkerPlacement::DATANAME_TARGETS);
+      (QString("Target ") + targetNumber).toStdString().c_str(), QmitkUSNavigationMarkerPlacement::DATANAME_TARGETS);
     targetNode->SetOpacity(0.5);
     targetNode->SetBoolProperty("surface_empty", true);
     targetNode->SetData(mitk::Surface::New());
@@ -499,10 +499,10 @@ void QmitkUSNavigationStepPlacementPlanning::CreateTargetNodesIfNecessary()
 
     mitk::DataNode::Pointer targetPathNode =
       this->GetNamedDerivedNodeAndCreate((QString("Target Path ") + targetNumber).toStdString().c_str(),
-                                         USNavigationMarkerPlacement::DATANAME_TARGETS_PATHS);
+                                         QmitkUSNavigationMarkerPlacement::DATANAME_TARGETS_PATHS);
     targetPathNode->SetOpacity(0.5);
     targetPathNode->SetColor(1, 1, 1);
-    targetPathNode->SetColor(1, 1, 1, NULL, "contourcolor");
+    targetPathNode->SetColor(1, 1, 1, nullptr, "contourcolor");
     targetPathNode->SetBoolProperty("show contour", true);
     m_PlannedNeedlePaths.push_back(targetPathNode);
 
@@ -708,7 +708,7 @@ mitk::DataNode::Pointer QmitkUSNavigationStepPlacementPlanning::CalculatePlannin
   if (m_PlannedTargetNodes.size() > 1)
   {
     double meanAnglesDifference = m_PlacementQualityCalculator->GetMeanAngleDifference();
-    ui->angleDifferenceValue->setText(QString::number(meanAnglesDifference, 103, 2) + QString::fromLatin1(" °"));
+    ui->angleDifferenceValue->setText(QString::number(meanAnglesDifference, 103, 2) + QString::fromLatin1(" Â°"));
 
     planningQualityResult->SetFloatProperty("USNavigation::MeanAngleDifference", meanAnglesDifference);
     planningQualityResult->SetProperty(
@@ -723,17 +723,16 @@ mitk::DataNode::Pointer QmitkUSNavigationStepPlacementPlanning::CalculatePlannin
   return planningQualityResult;
 }
 
-itk::SmartPointer<mitk::Surface> QmitkUSNavigationStepPlacementPlanning::CreateSphere(float radius)
+itk::SmartPointer<mitk::Surface> QmitkUSNavigationStepPlacementPlanning::CreateSphere(float)
 {
   mitk::Surface::Pointer surface = mitk::Surface::New();
 
   // create a vtk sphere with fixed radius
-  vtkSphereSource *vtkData = vtkSphereSource::New();
-  vtkData->SetRadius(5);
-  vtkData->SetCenter(0, 0, 0);
-  vtkData->Update();
-  surface->SetVtkPolyData(vtkData->GetOutput());
-  vtkData->Delete();
+  vtkSmartPointer<vtkSphereSource> vtkSphere = vtkSmartPointer<vtkSphereSource>::New();
+  vtkSphere->SetRadius(5);
+  vtkSphere->SetCenter(0, 0, 0);
+  vtkSphere->Update();
+  surface->SetVtkPolyData(vtkSphere->GetOutput());
 
   return surface;
 }

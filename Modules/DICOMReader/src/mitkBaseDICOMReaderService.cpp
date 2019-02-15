@@ -23,10 +23,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkDICOMFilesHelper.h>
 #include <mitkDICOMTagsOfInterestHelper.h>
 #include <mitkDICOMProperty.h>
-#include <mitkDicomSeriesReader.h>
+#include "legacy/mitkDicomSeriesReader.h"
 #include <mitkDICOMDCMTKTagScanner.h>
 #include <mitkLocaleSwitch.h>
+#include "mitkIPropertyProvider.h"
+#include "mitkPropertyNameHelper.h"
+
 #include <iostream>
+
+
+#include <itksys/SystemTools.hxx>
+#include <itksys/Directory.hxx>
 
 namespace mitk {
 
@@ -44,10 +51,10 @@ std::vector<itk::SmartPointer<BaseData> > BaseDICOMReaderService::Read()
 {
   std::vector<BaseData::Pointer> result;
 
-  //special handling of Philips 3D US DICOM.
-  //Copied from DICOMSeriesReaderService
 
   std::string fileName = this->GetLocalFileName();
+  //special handling of Philips 3D US DICOM.
+  //Copied from DICOMSeriesReaderService
   if (DicomSeriesReader::IsPhilips3DDicom(fileName))
   {
       MITK_INFO << "it is a Philips3D US Dicom file" << std::endl;
@@ -73,6 +80,30 @@ std::vector<itk::SmartPointer<BaseData> > BaseDICOMReaderService::Read()
   //Normal DICOM handling (It wasn't a Philips 3D US)
   mitk::StringList relevantFiles = this->GetRelevantFiles();
 
+  // check whether directory or file
+  // if directory try to find first file within it instead
+  // We only support this for a single directory at once
+  if (relevantFiles.empty())
+  {
+    bool pathIsDirectory = itksys::SystemTools::FileIsDirectory(this->GetLocalFileName());
+    if (pathIsDirectory)
+    {
+      itksys::Directory input;
+      input.Load(this->GetLocalFileName().c_str());
+
+      std::vector<std::string> files;
+      for (unsigned long idx = 0; idx<input.GetNumberOfFiles(); idx++)
+      {
+        if (!itksys::SystemTools::FileIsDirectory(input.GetFile(idx)))
+        {
+          std::string fullpath = this->GetLocalFileName() + "/" + std::string(input.GetFile(idx));
+          files.push_back(fullpath.c_str());
+        }
+      }
+      relevantFiles = files;
+    }
+  }
+
   if (relevantFiles.empty())
   {
       MITK_INFO << "DICOMReader service found no relevant files in specified location. No data is loaded. Location: "<<fileName;
@@ -87,6 +118,13 @@ std::vector<itk::SmartPointer<BaseData> > BaseDICOMReaderService::Read()
       }
       else
       {
+          const unsigned int ntotalfiles = relevantFiles.size();
+
+          for( unsigned int i=0; i< ntotalfiles; i++)
+          {
+            m_ReadFiles.push_back( relevantFiles.at(i) );
+          }
+
           reader->SetAdditionalTagsOfInterest(mitk::GetCurrentDICOMTagsOfInterest());
           reader->SetTagLookupTableToPropertyFunctor(mitk::GetDICOMPropertyForDICOMValuesFunctor);
           reader->SetInputFiles(relevantFiles);
@@ -105,24 +143,7 @@ std::vector<itk::SmartPointer<BaseData> > BaseDICOMReaderService::Read()
             const mitk::DICOMImageBlockDescriptor& desc = reader->GetOutput(i);
             mitk::BaseData::Pointer data = desc.GetMitkImage().GetPointer();
 
-            std::string nodeName = "Unnamed_DICOM";
-
-            std::string studyDescription = desc.GetPropertyAsString("studyDescription");
-            std::string seriesDescription = desc.GetPropertyAsString("seriesDescription");
-
-            if (!studyDescription.empty())
-            {
-              nodeName = studyDescription;
-            }
-
-            if (!seriesDescription.empty())
-            {
-              if (!studyDescription.empty())
-              {
-                nodeName += "/";
-              }
-              nodeName += seriesDescription;
-            }
+            std::string nodeName = GenerateNameFromDICOMProperties(&desc);
 
             StringProperty::Pointer nameProp = StringProperty::New(nodeName);
             data->SetProperty("name", nameProp);
@@ -144,5 +165,44 @@ StringList BaseDICOMReaderService::GetRelevantFiles() const
   return relevantFiles;
 }
 
+IFileReader::ConfidenceLevel BaseDICOMReaderService::GetConfidenceLevel() const
+{
+  IFileReader::ConfidenceLevel abstractConfidence = AbstractFileReader::GetConfidenceLevel();
+
+  if (Unsupported == abstractConfidence)
+  {
+    if (itksys::SystemTools::FileIsDirectory(this->GetInputLocation().c_str()))
+    {
+      // In principle we support dicom directories
+      return Supported;
+    }
+  }
+
+  return abstractConfidence;
+}
+
+std::string GenerateNameFromDICOMProperties(const mitk::IPropertyProvider* provider)
+{
+  std::string nodeName = mitk::DataNode::NO_NAME_VALUE();
+
+  auto studyProp = provider->GetConstProperty(mitk::GeneratePropertyNameForDICOMTag(0x0020, 0x000D).c_str());
+  if (studyProp.IsNotNull())
+  {
+    nodeName = studyProp->GetValueAsString();
+  }
+
+  auto seriesProp = provider->GetConstProperty(mitk::GeneratePropertyNameForDICOMTag(0x0020, 0x000E).c_str());
+
+  if (seriesProp.IsNotNull())
+  {
+    if (studyProp.IsNotNull())
+    {
+      nodeName += " / ";
+    }
+    nodeName += seriesProp->GetValueAsString();
+  }
+
+  return nodeName;
+};
 
 }

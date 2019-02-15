@@ -13,7 +13,9 @@
  See LICENSE.txt or http://www.mitk.org for details.
 
  ===================================================================*/
-#pragma warning (disable : 4996)
+#ifdef _MSC_VER
+#  pragma warning (disable : 4996)
+#endif
 
 #include "mitkCollectionReader.h"
 #include <vtkXMLDataElement.h>
@@ -53,9 +55,9 @@ static std::string GetDate(std::string fileName,std::string suffix)
 
 
 mitk::CollectionReader::CollectionReader()
- : m_Collection(NULL),
-   m_SubCollection(NULL),
-   m_DataItemCollection(NULL),
+ : m_Collection(nullptr),
+   m_SubCollection(nullptr),
+   m_DataItemCollection(nullptr),
    m_ColIgnore(false), m_ItemIgnore(false)
 {
 }
@@ -107,9 +109,9 @@ void mitk::CollectionReader::ClearSubColIds()
 
 void mitk::CollectionReader::Clear()
 {
-  m_DataItemCollection = NULL;
-  m_SubCollection = NULL;
-  m_Collection = NULL;
+  m_DataItemCollection = nullptr;
+  m_SubCollection = nullptr;
+  m_Collection = nullptr;
 }
 
 mitk::DataCollection::Pointer mitk::CollectionReader::FolderToCollection(std::string folder, std::vector<std::string> suffixes,std::vector<std::string> seriesNames,  bool allowGaps)
@@ -119,7 +121,7 @@ mitk::DataCollection::Pointer mitk::CollectionReader::FolderToCollection(std::st
   FileListType fileList = SanitizeFileList(GenerateFileLists(folder, suffixes, allowGaps));
 
   if (fileList.size() <= 0)
-    return NULL;
+    return nullptr;
 
   DataCollection::Pointer collection = DataCollection::New();
   collection->SetName(GetName(fileList.at(0).at(0),suffixes.at(0)));
@@ -129,7 +131,7 @@ mitk::DataCollection::Pointer mitk::CollectionReader::FolderToCollection(std::st
     DataCollection::Pointer subCollection = DataCollection::New();
     for (unsigned int i=0; i< suffixes.size(); ++i)
     {
-      Image::Pointer image = IOUtil::LoadImage(fileList.at(i).at(k));
+      auto image = IOUtil::Load<Image>(fileList.at(i).at(k));
       subCollection->AddData(image.GetPointer(),seriesNames.at(i), fileList.at(i).at(k));
     }
     std::string sDate =  GetDate(fileList.at(0).at(k),suffixes.at(0));
@@ -198,7 +200,7 @@ void mitk::CollectionReader::StartElement(const char* elementName, const char **
       return;
 
     // Populate Sub-Collection
-    Image::Pointer image = IOUtil::LoadImage(itemLink);
+    auto image = IOUtil::Load<Image>(itemLink);
     if (image.IsNotNull())
       m_DataItemCollection->AddData(image.GetPointer(),itemName,relativeItemLink);
     else

@@ -104,10 +104,10 @@ namespace mitk
     //////////////////// Functions ///////////////////////
     ConnectomicsNetworkCreator();
     ConnectomicsNetworkCreator( mitk::Image::Pointer segmentation, mitk::FiberBundle::Pointer fiberBundle );
-    ~ConnectomicsNetworkCreator();
+    ~ConnectomicsNetworkCreator() override;
 
     /** Add a connection to the network */
-    void AddConnectionToNetwork(ConnectionType newConnection);
+    void AddConnectionToNetwork(ConnectionType newConnection, double fiber_count);
 
     /** Determine if a label is already identified with a vertex, otherwise create a new one */
     VertexType ReturnAssociatedVertexForLabel( ImageLabelType label );
@@ -147,9 +147,6 @@ namespace mitk
      * This can throw an exception if the label is not found.
      */
     std::vector< double > GetCenterOfMass( int label );
-
-    /** Convert point to itk point */
-    itk::Point<float, 3> GetItkPoint(double point[3]);
 
     /** \brief Creates a new node
      *

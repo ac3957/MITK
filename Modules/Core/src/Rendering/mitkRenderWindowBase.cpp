@@ -21,7 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkAnnotationUtils.h"
 
-mitk::RenderWindowBase::RenderWindowBase() : m_RenderProp(NULL), m_InResize(false)
+mitk::RenderWindowBase::RenderWindowBase() : m_RenderProp(nullptr), m_InResize(false)
 {
 }
 
@@ -43,7 +43,7 @@ void mitk::RenderWindowBase::Initialize(mitk::RenderingManager *renderingManager
                                         const char *name,
                                         mitk::BaseRenderer::RenderingMode::Type renderingMode)
 {
-  if (renderingManager == NULL)
+  if (renderingManager == nullptr)
   {
     renderingManager = mitk::RenderingManager::GetInstance();
   }
@@ -80,9 +80,9 @@ bool mitk::RenderWindowBase::HandleEvent(InteractionEvent *interactionEvent)
 void mitk::RenderWindowBase::Destroy()
 {
   m_Renderer->GetRenderingManager()->RemoveRenderWindow(GetVtkRenderWindow());
-  mitk::BaseRenderer::RemoveInstance(GetVtkRenderWindow());
   m_Renderer->GetVtkRenderer()->RemoveViewProp(m_RenderProp);
   m_RenderProp->Delete();
+  BaseRenderer::RemoveInstance(this->GetVtkRenderWindow());
 }
 
 mitk::RenderWindowBase::~RenderWindowBase()

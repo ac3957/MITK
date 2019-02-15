@@ -54,12 +54,12 @@ class MITKQTWIDGETS_EXPORT QmitkStdMultiWidget : public QWidget
 
 public:
   QmitkStdMultiWidget(
-    QWidget *parent = 0,
-    Qt::WindowFlags f = 0,
-    mitk::RenderingManager *renderingManager = 0,
+    QWidget *parent = nullptr,
+    Qt::WindowFlags f = nullptr,
+    mitk::RenderingManager *renderingManager = nullptr,
     mitk::BaseRenderer::RenderingMode::Type renderingMode = mitk::BaseRenderer::RenderingMode::Standard,
     const QString &name = "stdmulti");
-  virtual ~QmitkStdMultiWidget();
+  ~QmitkStdMultiWidget() override;
 
   mitk::SliceNavigationController *GetTimeNavigationController();
 
@@ -142,8 +142,6 @@ protected:
 
   void HideAllWidgetToolbars();
 
-  mitk::DataNode::Pointer GetTopLayerNode(mitk::DataStorage::SetOfObjects::ConstPointer nodes);
-
 public slots:
 
   /// Receives the signal from HandleCrosshairPositionEvent, executes the StatusBar update
@@ -175,7 +173,11 @@ public slots:
 
   void changeLayoutToLeft2Dand3DRight2D();
 
-  void changeLayoutTo2DUpAnd3DDown();
+  /** Changes the layout to one 2D window up and a 3D window down.
+   *  The 2D window can be defined by its id (1-3). If MITK default
+   *  settings were not changed, 1 is axial, 2 is sagittal and 3 is coronal.
+   */
+  void changeLayoutTo2DUpAnd3DDown(unsigned int id2Dwindow = 2);
 
   void Fit();
 
@@ -215,9 +217,9 @@ public slots:
 
   void DisableColoredRectangles();
 
-  void SetWidgetPlaneVisibility(const char *widgetName, bool visible, mitk::BaseRenderer *renderer = NULL);
+  void SetWidgetPlaneVisibility(const char *widgetName, bool visible, mitk::BaseRenderer *renderer = nullptr);
 
-  void SetWidgetPlanesVisibility(bool visible, mitk::BaseRenderer *renderer = NULL);
+  void SetWidgetPlanesVisibility(bool visible, mitk::BaseRenderer *renderer = nullptr);
 
   void SetWidgetPlanesLocked(bool locked);
 
@@ -229,7 +231,7 @@ public slots:
 
   void SetGradientBackgroundColors(const mitk::Color &upper, const mitk::Color &lower);
 
-  void SetDepartmentLogoPath(const char *path);
+  void SetDepartmentLogo(const char *path);
 
   void SetWidgetPlaneModeToSlicing(bool activate);
 

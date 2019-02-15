@@ -61,9 +61,9 @@ public:
   {
     mitk::BaseData::Pointer baseData;
 
-    // NULL pointer Test
+    // nullptr pointer Test
     dataNode->SetData(baseData);
-    MITK_TEST_CONDITION(baseData == dataNode->GetData(), "Testing if a NULL pointer was set correctly")
+    MITK_TEST_CONDITION(baseData == dataNode->GetData(), "Testing if a nullptr pointer was set correctly")
 
     baseData = mitk::GeometryData::New();
     dataNode->SetData(baseData);
@@ -87,7 +87,7 @@ public:
 
     dataNode->SetData(nullptr);
     MITK_TEST_CONDITION(nullptr == dataNode->GetData(),
-                        "Testing if base data (already set) was replaced by a NULL pointer")
+                        "Testing if base data (already set) was replaced by a nullptr pointer")
   }
   static void TestMapperSetting(mitk::DataNode::Pointer dataNode)
   {
@@ -98,7 +98,7 @@ public:
     mitk::Mapper::Pointer mapper;
 
     dataNode->SetMapper(0, mapper);
-    MITK_TEST_CONDITION(mapper == dataNode->GetMapper(0), "Testing if a NULL pointer was set correctly")
+    MITK_TEST_CONDITION(mapper == dataNode->GetMapper(0), "Testing if a nullptr pointer was set correctly")
 
     mapper = mitk::PlaneGeometryDataMapper2D::New();
     dataNode->SetMapper(1, mapper);
@@ -144,7 +144,7 @@ public:
     mitk::DataInteractor::Pointer interactor;
 
     MITK_TEST_CONDITION(interactor == dataNode->GetDataInteractor(),
-                        "Testing if a NULL pointer was set correctly (DataInteractor)")
+                        "Testing if a nullptr pointer was set correctly (DataInteractor)")
 
     interactor = mitk::PointSetDataInteractor::New();
     interactor->SetEventConfig("PointSetConfig.xml");
@@ -161,7 +161,7 @@ public:
   {
     mitk::PropertyList::Pointer propertyList = dataNode->GetPropertyList();
 
-    MITK_TEST_CONDITION(dataNode->GetPropertyList() != NULL, "Testing if the constructor set the propertylist")
+    MITK_TEST_CONDITION(dataNode->GetPropertyList() != nullptr, "Testing if the constructor set the propertylist")
 
     dataNode->SetIntProperty("int", -31337);
     int x;
@@ -199,6 +199,22 @@ public:
 
     MITK_TEST_CONDITION(propertyList == dataNode->GetPropertyList(),
                         "Testing if the propertylist has changed during the last tests")
+  }
+
+  static void TestDataPropertiesFallback(mitk::DataNode::Pointer dataNode)
+  {
+    const std::string name = "Catch Me If You Can";
+
+    auto image = mitk::Image::New();
+    image->SetProperty(name, mitk::StringProperty::New("Don't tase me, bro!"));
+
+    dataNode->SetData(image);
+
+    auto property = dataNode->GetProperty(name.c_str());
+    MITK_TEST_CONDITION(nullptr != property, "Testing GetProperty data property fallback (new behavior)");
+
+    property = dataNode->GetProperty(name.c_str(), nullptr, false);
+    MITK_TEST_CONDITION(nullptr == property, "Testing GetProperty data property fallback (old behavior)");
   }
 
   static void TestSelected(mitk::DataNode::Pointer dataNode)
@@ -305,6 +321,7 @@ int mitkDataNodeTest(int /* argc */, char * /*argv*/ [])
   // note, that no data is set to the dataNode
   mitkDataNodeTestClass::TestInteractorSetting(myDataNode);
   mitkDataNodeTestClass::TestPropertyList(myDataNode);
+  mitkDataNodeTestClass::TestDataPropertiesFallback(myDataNode);
   mitkDataNodeTestClass::TestSelected(myDataNode);
   mitkDataNodeTestClass::TestGetMTime(myDataNode);
   mitkDataNodeTestClass::TestSetDataUnderPropertyChange();

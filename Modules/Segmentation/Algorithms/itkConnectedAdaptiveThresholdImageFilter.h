@@ -60,7 +60,6 @@ namespace itk
 
     int GetSeedpointValue(void) { return m_SeedpointValue; }
     int GetLeakagePoint(void) { return m_DetectedLeakagePoint; }
-    bool m_SegmentationCancelled;
 
     /*
     * Correct the position of the seed point, only performed if seed point value is outside threshold range
@@ -96,11 +95,9 @@ namespace itk
 
   protected:
     ConnectedAdaptiveThresholdImageFilter();
-    ~ConnectedAdaptiveThresholdImageFilter(){};
+    ~ConnectedAdaptiveThresholdImageFilter() override{};
 
-    void GenerateData();
-
-    TOutputImage *m_IteratorMaskForFineSegmentation;
+    void GenerateData() override;
 
   private:
     OutputImagePointer m_OutoutImageMaskFineSegmentation;
@@ -116,6 +113,7 @@ namespace itk
     bool m_FineDetectionMode;
 
     bool m_DiscardLastPreview;
+    bool m_SegmentationCancelled;
   };
 
 } // end namespace itk

@@ -43,6 +43,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkProperties.h>
 #include <mitkStatusBar.h>
 #include <mitkVtkLayerController.h>
+#include <vtkSmartPointer.h>
+#include <vtkQImageToImageSource.h>
 #include <vtkCornerAnnotation.h>
 #include <vtkMitkRectangleProp.h>
 #include <vtkTextProperty.h>
@@ -55,32 +57,32 @@ QmitkStdMultiWidget::QmitkStdMultiWidget(QWidget *parent,
                                          mitk::BaseRenderer::RenderingMode::Type renderingMode,
                                          const QString &name)
   : QWidget(parent, f),
-    mitkWidget1(NULL),
-    mitkWidget2(NULL),
-    mitkWidget3(NULL),
-    mitkWidget4(NULL),
-    levelWindowWidget(NULL),
-    QmitkStdMultiWidgetLayout(NULL),
+    mitkWidget1(nullptr),
+    mitkWidget2(nullptr),
+    mitkWidget3(nullptr),
+    mitkWidget4(nullptr),
+    levelWindowWidget(nullptr),
+    QmitkStdMultiWidgetLayout(nullptr),
     m_Layout(LAYOUT_DEFAULT),
     m_PlaneMode(PLANE_MODE_SLICING),
     m_RenderingManager(renderingManager),
     m_GradientBackgroundFlag(true),
-    m_TimeNavigationController(NULL),
-    m_MainSplit(NULL),
-    m_LayoutSplit(NULL),
-    m_SubSplit1(NULL),
-    m_SubSplit2(NULL),
-    mitkWidget1Container(NULL),
-    mitkWidget2Container(NULL),
-    mitkWidget3Container(NULL),
-    mitkWidget4Container(NULL),
+    m_TimeNavigationController(nullptr),
+    m_MainSplit(nullptr),
+    m_LayoutSplit(nullptr),
+    m_SubSplit1(nullptr),
+    m_SubSplit2(nullptr),
+    mitkWidget1Container(nullptr),
+    mitkWidget2Container(nullptr),
+    mitkWidget3Container(nullptr),
+    mitkWidget4Container(nullptr),
     m_PendingCrosshairPositionEvent(false),
     m_CrosshairNavigationEnabled(false)
 {
   /******************************************************
    * Use the global RenderingManager if none was specified
    * ****************************************************/
-  if (m_RenderingManager == NULL)
+  if (m_RenderingManager == nullptr)
   {
     m_RenderingManager = mitk::RenderingManager::GetInstance();
   }
@@ -161,23 +163,23 @@ QmitkStdMultiWidget::QmitkStdMultiWidget(QWidget *parent,
   m_SubSplit2->addWidget(mitkWidget4Container);
 
   // Create RenderWindows 1
-  mitkWidget1 = new QmitkRenderWindow(mitkWidget1Container, name + ".widget1", NULL, m_RenderingManager, renderingMode);
+  mitkWidget1 = new QmitkRenderWindow(mitkWidget1Container, name + ".widget1", nullptr, m_RenderingManager, renderingMode);
   mitkWidget1->SetLayoutIndex(AXIAL);
   mitkWidgetLayout1->addWidget(mitkWidget1);
 
   // Create RenderWindows 2
-  mitkWidget2 = new QmitkRenderWindow(mitkWidget2Container, name + ".widget2", NULL, m_RenderingManager, renderingMode);
+  mitkWidget2 = new QmitkRenderWindow(mitkWidget2Container, name + ".widget2", nullptr, m_RenderingManager, renderingMode);
   mitkWidget2->setEnabled(true);
   mitkWidget2->SetLayoutIndex(SAGITTAL);
   mitkWidgetLayout2->addWidget(mitkWidget2);
 
   // Create RenderWindows 3
-  mitkWidget3 = new QmitkRenderWindow(mitkWidget3Container, name + ".widget3", NULL, m_RenderingManager, renderingMode);
+  mitkWidget3 = new QmitkRenderWindow(mitkWidget3Container, name + ".widget3", nullptr, m_RenderingManager, renderingMode);
   mitkWidget3->SetLayoutIndex(CORONAL);
   mitkWidgetLayout3->addWidget(mitkWidget3);
 
   // Create RenderWindows 4
-  mitkWidget4 = new QmitkRenderWindow(mitkWidget4Container, name + ".widget4", NULL, m_RenderingManager, renderingMode);
+  mitkWidget4 = new QmitkRenderWindow(mitkWidget4Container, name + ".widget4", nullptr, m_RenderingManager, renderingMode);
   mitkWidget4->SetLayoutIndex(THREE_D);
   mitkWidgetLayout4->addWidget(mitkWidget4);
 
@@ -308,9 +310,9 @@ void QmitkStdMultiWidget::InitializeWidget()
   mitk::Point2D offset;
   offset.Fill(0.03);
   m_LogoRendering->SetOffsetVector(offset);
-  m_LogoRendering->SetRelativeSize(0.15);
+  m_LogoRendering->SetRelativeSize(0.25);
   m_LogoRendering->SetCornerPosition(1);
-  m_LogoRendering->SetLogoImagePath("DefaultLogo");
+  SetDepartmentLogo(":/org.mitk.gui.qt.stdmultiwidgeteditor/defaultWatermark.png");
   mitk::ManualPlacementAnnotationRenderer::AddAnnotation(m_LogoRendering.GetPointer(), renderer4);
 }
 
@@ -319,7 +321,7 @@ void QmitkStdMultiWidget::FillGradientBackgroundWithBlack()
   // We have 4 widgets and ...
   for (unsigned int i = 0; i < 4; ++i)
   {
-    float black[3] = {0.0f, 0.0f, 0.0f};
+    float black[3] = { 0.0f, 0.0f, 0.0f };
     m_GradientBackgroundColors[i] = std::make_pair(mitk::Color(black), mitk::Color(black));
   }
 }
@@ -329,7 +331,7 @@ std::pair<mitk::Color, mitk::Color> QmitkStdMultiWidget::GetGradientColors(unsig
   if (widgetNumber > 3)
   {
     MITK_ERROR << "Decoration color for unknown widget!";
-    float black[3] = {0.0f, 0.0f, 0.0f};
+    float black[3] = { 0.0f, 0.0f, 0.0f };
     return std::make_pair(mitk::Color(black), mitk::Color(black));
   }
   return m_GradientBackgroundColors[widgetNumber];
@@ -648,7 +650,7 @@ QmitkRenderWindow *QmitkStdMultiWidget::GetRenderWindow(unsigned int number)
       MITK_ERROR << "Requested unknown render window";
       break;
   }
-  return NULL;
+  return nullptr;
 }
 
 void QmitkStdMultiWidget::changeLayoutToDefault()
@@ -1213,9 +1215,14 @@ void QmitkStdMultiWidget::changeLayoutToLeft2Dand3DRight2D()
   this->UpdateAllWidgets();
 }
 
-void QmitkStdMultiWidget::changeLayoutTo2DUpAnd3DDown()
+void QmitkStdMultiWidget::changeLayoutTo2DUpAnd3DDown(unsigned int id2Dwindow)
 {
   SMW_INFO << "changing layout to 2D up and 3D down" << std::endl;
+  if (id2Dwindow < 1 || id2Dwindow > 3)
+  {
+    MITK_WARN << "Only 2D render window IDs 1,2 or 3 are valid. Got ID " << id2Dwindow << ". " << "Using default ID 2 instead.";
+    id2Dwindow = 2;
+  }
 
   // Hide all Menu Widgets
   this->HideAllWidgetToolbars();
@@ -1244,7 +1251,18 @@ void QmitkStdMultiWidget::changeLayoutTo2DUpAnd3DDown()
   m_SubSplit2 = new QSplitter(m_LayoutSplit);
 
   // insert Widget Container into splitter top
-  m_SubSplit1->addWidget(mitkWidget1Container);
+  switch (id2Dwindow)
+  {
+  case 1:
+    m_SubSplit1->addWidget(mitkWidget1Container);
+    break;
+  case 2:
+    m_SubSplit1->addWidget(mitkWidget2Container);
+    break;
+  case 3:
+    m_SubSplit1->addWidget(mitkWidget3Container);
+    break;
+  }
 
   // set SplitterSize for splitter top
   QList<int> splitterSize;
@@ -1260,10 +1278,29 @@ void QmitkStdMultiWidget::changeLayoutTo2DUpAnd3DDown()
   m_MainSplit->show();
 
   // show/hide Widgets
-  if (mitkWidget1->isHidden())
-    mitkWidget1->show();
-  mitkWidget2->hide();
-  mitkWidget3->hide();
+  switch (id2Dwindow)
+  {
+  case 1:
+    if (mitkWidget1->isHidden())
+      mitkWidget1->show();
+    mitkWidget2->hide();
+    mitkWidget3->hide();
+    break;
+  case 2:
+    if (mitkWidget2->isHidden())
+      mitkWidget2->show();
+    mitkWidget1->hide();
+    mitkWidget3->hide();
+    break;
+  case 3:
+    if (mitkWidget3->isHidden())
+      mitkWidget3->show();
+    mitkWidget1->hide();
+    mitkWidget2->hide();
+    break;
+  }
+
+  //always show 3D widget
   if (mitkWidget4->isHidden())
     mitkWidget4->show();
 
@@ -1297,19 +1334,19 @@ void QmitkStdMultiWidget::Fit()
 {
   vtkSmartPointer<vtkRenderer> vtkrenderer;
   vtkrenderer = mitk::BaseRenderer::GetInstance(mitkWidget1->GetRenderWindow())->GetVtkRenderer();
-  if (vtkrenderer != NULL)
+  if (vtkrenderer != nullptr)
     vtkrenderer->ResetCamera();
 
   vtkrenderer = mitk::BaseRenderer::GetInstance(mitkWidget2->GetRenderWindow())->GetVtkRenderer();
-  if (vtkrenderer != NULL)
+  if (vtkrenderer != nullptr)
     vtkrenderer->ResetCamera();
 
   vtkrenderer = mitk::BaseRenderer::GetInstance(mitkWidget3->GetRenderWindow())->GetVtkRenderer();
-  if (vtkrenderer != NULL)
+  if (vtkrenderer != nullptr)
     vtkrenderer->ResetCamera();
 
   vtkrenderer = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow())->GetVtkRenderer();
-  if (vtkrenderer != NULL)
+  if (vtkrenderer != nullptr)
     vtkrenderer->ResetCamera();
 
   mitk::BaseRenderer::GetInstance(mitkWidget1->GetRenderWindow())->GetCameraController()->Fit();
@@ -1416,7 +1453,7 @@ void QmitkStdMultiWidget::wheelEvent(QWheelEvent *e)
   emit WheelMoved(e);
 }
 
-void QmitkStdMultiWidget::mousePressEvent(QMouseEvent *e)
+void QmitkStdMultiWidget::mousePressEvent(QMouseEvent *)
 {
 }
 
@@ -1456,10 +1493,10 @@ const mitk::Point3D QmitkStdMultiWidget::GetCrossPosition() const
   const mitk::PlaneGeometry *plane3 = mitkWidget3->GetSliceNavigationController()->GetCurrentPlaneGeometry();
 
   mitk::Line3D line;
-  if ((plane1 != NULL) && (plane2 != NULL) && (plane1->IntersectionLine(plane2, line)))
+  if ((plane1 != nullptr) && (plane2 != nullptr) && (plane1->IntersectionLine(plane2, line)))
   {
     mitk::Point3D point;
-    if ((plane3 != NULL) && (plane3->IntersectionPoint(line, point)))
+    if ((plane3 != nullptr) && (plane3->IntersectionPoint(line, point)))
     {
       return point;
     }
@@ -1512,61 +1549,32 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEvent()
   }
 }
 
-mitk::DataNode::Pointer QmitkStdMultiWidget::GetTopLayerNode(mitk::DataStorage::SetOfObjects::ConstPointer nodes)
-{
-  mitk::Point3D crosshairPos = this->GetCrossPosition();
-  mitk::DataNode::Pointer node;
-  int maxlayer = -32768;
-
-  if (nodes.IsNotNull())
-  {
-    mitk::BaseRenderer *baseRenderer = this->mitkWidget1->GetSliceNavigationController()->GetRenderer();
-    // find node with largest layer, that is the node shown on top in the render window
-    for (unsigned int x = 0; x < nodes->size(); x++)
-    {
-      if ((nodes->at(x)->GetData()->GetGeometry() != NULL) &&
-          nodes->at(x)->GetData()->GetGeometry()->IsInside(crosshairPos))
-      {
-        int layer = 0;
-        if (!(nodes->at(x)->GetIntProperty("layer", layer)))
-          continue;
-        if (layer > maxlayer)
-        {
-          if (static_cast<mitk::DataNode::Pointer>(nodes->at(x))->IsVisible(baseRenderer))
-          {
-            node = nodes->at(x);
-            maxlayer = layer;
-          }
-        }
-      }
-    }
-  }
-  return node;
-}
-
 void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
 {
   m_PendingCrosshairPositionEvent = false;
 
   // find image with highest layer
   mitk::TNodePredicateDataType<mitk::Image>::Pointer isImageData = mitk::TNodePredicateDataType<mitk::Image>::New();
-  mitk::DataStorage::SetOfObjects::ConstPointer nodes = this->m_DataStorage->GetSubset(isImageData).GetPointer();
+  mitk::DataStorage::SetOfObjects::ConstPointer nodes = m_DataStorage->GetSubset(isImageData).GetPointer();
+  mitk::Point3D crosshairPos = GetCrossPosition();
+  mitk::BaseRenderer* baseRenderer = mitkWidget1->GetSliceNavigationController()->GetRenderer();
+  auto globalCurrentTimePoint = baseRenderer->GetTime();
+  mitk::DataNode::Pointer node = mitk::FindTopmostVisibleNode(nodes, crosshairPos, globalCurrentTimePoint, baseRenderer);
 
-  mitk::DataNode::Pointer node;
   mitk::DataNode::Pointer topSourceNode;
   mitk::Image::Pointer image;
   bool isBinary = false;
-  node = this->GetTopLayerNode(nodes);
   int component = 0;
+
   if (node.IsNotNull())
   {
     node->GetBoolProperty("binary", isBinary);
     if (isBinary)
     {
-      mitk::DataStorage::SetOfObjects::ConstPointer sourcenodes = m_DataStorage->GetSources(node, NULL, true);
+      mitk::DataStorage::SetOfObjects::ConstPointer sourcenodes = m_DataStorage->GetSources(node, nullptr, true);
       if (!sourcenodes->empty())
       {
-        topSourceNode = this->GetTopLayerNode(sourcenodes);
+        topSourceNode = mitk::FindTopmostVisibleNode(sourcenodes, crosshairPos,globalCurrentTimePoint, baseRenderer);
       }
       if (topSourceNode.IsNotNull())
       {
@@ -1586,11 +1594,9 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
     }
   }
 
-  mitk::Point3D crosshairPos = this->GetCrossPosition();
   std::string statusText;
   std::stringstream stream;
   itk::Index<3> p;
-  mitk::BaseRenderer *baseRenderer = this->mitkWidget1->GetSliceNavigationController()->GetRenderer();
   unsigned int timestep = baseRenderer->GetTimeStep();
 
   if (image.IsNotNull() && (image->GetTimeSteps() > timestep))
@@ -1606,18 +1612,18 @@ void QmitkStdMultiWidget::HandleCrosshairPositionEventDelayed()
     mitkPixelTypeMultiplex5(mitk::FastSinglePixelAccess,
                             image->GetChannelDescriptor().GetPixelType(),
                             image,
-                            image->GetVolumeData(baseRenderer->GetTimeStep()),
+                            image->GetVolumeData(image->GetTimeGeometry()->TimePointToTimeStep(globalCurrentTimePoint)),
                             p,
                             pixelValue,
                             component);
 
     if (fabs(pixelValue) > 1000000 || fabs(pixelValue) < 0.01)
     {
-      stream << "; Time: " << baseRenderer->GetTime() << " ms; Pixelvalue: " << std::scientific << pixelValue << "  ";
+      stream << "; Time: " <<globalCurrentTimePoint << " ms; Pixelvalue: " << std::scientific << pixelValue << "  ";
     }
     else
     {
-      stream << "; Time: " << baseRenderer->GetTime() << " ms; Pixelvalue: " << pixelValue << "  ";
+      stream << "; Time: " <<globalCurrentTimePoint << " ms; Pixelvalue: " << pixelValue << "  ";
     }
   }
   else
@@ -1681,7 +1687,7 @@ void QmitkStdMultiWidget::SetWidgetPlaneVisibility(const char *widgetName, bool 
   if (m_DataStorage.IsNotNull())
   {
     mitk::DataNode *n = m_DataStorage->GetNamedNode(widgetName);
-    if (n != NULL)
+    if (n != nullptr)
       n->SetVisibility(visible, renderer);
   }
 }
@@ -1779,9 +1785,16 @@ void QmitkStdMultiWidget::SetGradientBackgroundColors(const mitk::Color &upper, 
   m_GradientBackgroundFlag = true;
 }
 
-void QmitkStdMultiWidget::SetDepartmentLogoPath(const char *path)
+void QmitkStdMultiWidget::SetDepartmentLogo(const char *path)
 {
-  m_LogoRendering->SetLogoImagePath(path);
+  QImage* qimage = new QImage(path);
+  vtkSmartPointer<vtkQImageToImageSource> qImageToVtk;
+  qImageToVtk = vtkSmartPointer<vtkQImageToImageSource>::New();
+
+  qImageToVtk->SetQImage(qimage);
+  qImageToVtk->Update();
+
+  m_LogoRendering->SetLogoImage(qImageToVtk->GetOutput());
   mitk::BaseRenderer *renderer = mitk::BaseRenderer::GetInstance(mitkWidget4->GetRenderWindow());
   m_LogoRendering->Update(renderer);
   RequestUpdate();
@@ -2016,6 +2029,6 @@ mitk::DataNode::Pointer QmitkStdMultiWidget::GetWidgetPlane(int id)
       return this->m_PlaneNode3;
       break;
     default:
-      return NULL;
+      return nullptr;
   }
 }

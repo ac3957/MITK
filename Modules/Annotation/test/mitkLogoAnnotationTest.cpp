@@ -38,6 +38,7 @@ private:
   std::string m_PathToBall;
   std::string m_PathToImage;
   std::string m_PathToLogo;
+  std::string m_PathToMitkLogo;
   std::string m_ReferenceImagePath;
 
 public:
@@ -58,6 +59,7 @@ public:
     m_PathToBall = GetTestDataFilePath("ball.stl");
     m_PathToImage = GetTestDataFilePath("Pic3D.nrrd");
     m_PathToLogo = GetTestDataFilePath("RenderingTestData/texture.jpg");
+    m_PathToMitkLogo = GetTestDataFilePath("RenderingTestData/defaultWatermark.png");
     m_ReferenceImagePath = "RenderingTestData/ReferenceScreenshots/Annotation/";
 
     // Build a command line for the vtkTesting::Test method.
@@ -80,7 +82,7 @@ public:
     imagenode->SetData(mitk::IOUtil::Load(m_PathToImage)[0]);
     m_RenderingTestHelper.AddNodeToStorage(imagenode);
 
-    std::string refImagePath = GetTestDataFilePath(m_ReferenceImagePath + "LogoAnnotation_mbiLogo.png");
+    std::string refImagePath = GetTestDataFilePath(m_ReferenceImagePath + "LogoAnnotation_mitkLogo.png");
 
     // reference screenshot for this test
     m_CommandlineArgs.push_back(refImagePath);
@@ -90,7 +92,14 @@ public:
 
     mitk::LogoAnnotation::Pointer logoAnnotation = mitk::LogoAnnotation::New();
 
-    logoAnnotation->SetLogoImagePath("mbilogo");
+    logoAnnotation->SetLogoImagePath(m_PathToMitkLogo);
+    logoAnnotation->LoadLogoImageFromPath();
+    logoAnnotation->SetOpacity(0.5);
+    mitk::Point2D offset;
+    offset.Fill(0.03);
+    logoAnnotation->SetOffsetVector(offset);
+    logoAnnotation->SetRelativeSize(0.5);
+    logoAnnotation->SetCornerPosition(1);
 
     mitk::BaseRenderer *renderer = mitk::BaseRenderer::GetInstance(m_RenderingTestHelper.GetVtkRenderWindow());
     mitk::ManualPlacementAnnotationRenderer::AddAnnotation(logoAnnotation.GetPointer(), renderer);
@@ -122,6 +131,7 @@ public:
     mitk::LogoAnnotation::Pointer logoAnnotation = mitk::LogoAnnotation::New();
 
     logoAnnotation->SetLogoImagePath(m_PathToLogo);
+    logoAnnotation->LoadLogoImageFromPath();
 
     mitk::BaseRenderer *renderer = mitk::BaseRenderer::GetInstance(m_RenderingTestHelper.GetVtkRenderWindow());
     mitk::ManualPlacementAnnotationRenderer::AddAnnotation(logoAnnotation.GetPointer(), renderer);

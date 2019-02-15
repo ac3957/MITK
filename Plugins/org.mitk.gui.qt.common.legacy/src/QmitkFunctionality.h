@@ -17,13 +17,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #ifndef QMITKFUNCTIONALITY_H_
 #define QMITKFUNCTIONALITY_H_
 
-#ifdef __MINGW32__
-// We need to inlclude winbase.h here in order to declare
-// atomic intrinsics like InterlockedIncrement correctly.
-// Otherwhise, they would be declared wrong within qatomic_windows.h .
-#include <windows.h>
-#endif
-
 //# blueberry stuff
 #include <berryQtViewPart.h>
 #include <berryIPreferencesService.h>
@@ -264,12 +257,12 @@ protected:
   /// \param showDialog controls, whether additionally a message box should be
   ///        displayed to inform the user that something went wrong
   ///
-  void HandleException( std::exception& e, QWidget* parent = NULL, bool showDialog = true ) const;
+  void HandleException( std::exception& e, QWidget* parent = nullptr, bool showDialog = true ) const;
   ///
   /// Calls HandleException ( std::exception&, QWidget*, bool ) internally
   /// \see HandleException ( std::exception&, QWidget*, bool )
   ///
-  void HandleException( const char* str, QWidget* parent = NULL, bool showDialog = true ) const;
+  void HandleException( const char* str, QWidget* parent = nullptr, bool showDialog = true ) const;
   ///
   /// Convenient method to set and reset a wait cursor ("hourglass")
   ///

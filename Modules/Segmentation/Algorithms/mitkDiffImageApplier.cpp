@@ -26,7 +26,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkImageRegionConstIterator.h>
 #include <itkImageSliceIteratorWithIndex.h>
 
+#include <type_traits>
+
 mitk::DiffImageApplier::DiffImageApplier()
+  : m_Image(nullptr),
+    m_SliceDifferenceImage(nullptr),
+    m_SliceIndex(0),
+    m_SliceDimension(0),
+    m_TimeStep(0),
+    m_Dimension0(0),
+    m_Dimension1(0),
+    m_Factor(1.0)
 {
 }
 
@@ -36,7 +46,7 @@ mitk::DiffImageApplier::~DiffImageApplier()
 
 void mitk::DiffImageApplier::ExecuteOperation(Operation *operation)
 {
-  ApplyDiffImageOperation *imageOperation = dynamic_cast<ApplyDiffImageOperation *>(operation);
+  auto *imageOperation = dynamic_cast<ApplyDiffImageOperation *>(operation);
   if (imageOperation // we actually have the kind of operation that we can handle
       &&
       imageOperation->IsImageStillValid()) // AND the image is not yet deleted
@@ -329,6 +339,11 @@ void mitk::DiffImageApplier::ItkImageProcessing3DDiff(itk::Image<TPixel1, VImage
   }
 }
 
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable:4146) // unary minus operator applied to unsigned type, result still unsigned
+#endif
+
 template <typename TPixel, unsigned int VImageDimension>
 void mitk::DiffImageApplier::ItkInvertPixelValues(itk::Image<TPixel, VImageDimension> *itkImage)
 {
@@ -342,3 +357,7 @@ void mitk::DiffImageApplier::ItkInvertPixelValues(itk::Image<TPixel, VImageDimen
     ++iter;
   }
 }
+
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif

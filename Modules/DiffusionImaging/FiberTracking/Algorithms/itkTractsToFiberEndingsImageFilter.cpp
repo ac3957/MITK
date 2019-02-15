@@ -20,16 +20,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
 #include <boost/progress.hpp>
+#include <mitkDiffusionFunctionCollection.h>
 
 namespace itk{
 
   template< class OutputImageType >
   TractsToFiberEndingsImageFilter< OutputImageType >::TractsToFiberEndingsImageFilter()
-    : m_InvertImage(false)
-    , m_UpsamplingFactor(1)
-    , m_InputImage(NULL)
+    : m_UpsamplingFactor(1)
+    , m_InvertImage(false)
     , m_UseImageGeometry(false)
     , m_BinaryOutput(false)
+    , m_InputImage(nullptr)
   {
 
   }
@@ -37,16 +38,6 @@ namespace itk{
   template< class OutputImageType >
   TractsToFiberEndingsImageFilter< OutputImageType >::~TractsToFiberEndingsImageFilter()
   {
-  }
-
-  template< class OutputImageType >
-  itk::Point<float, 3> TractsToFiberEndingsImageFilter< OutputImageType >::GetItkPoint(double point[3])
-  {
-    itk::Point<float, 3> itkPoint;
-    itkPoint[0] = point[0];
-    itkPoint[1] = point[1];
-    itkPoint[2] = point[2];
-    return itkPoint;
   }
 
   template< class OutputImageType >
@@ -108,50 +99,52 @@ namespace itk{
       outImageBufferPointer[i] = 0;
 
     // resample fiber bundle
-    float minSpacing = 1;
-    if(newSpacing[0]<newSpacing[1] && newSpacing[0]<newSpacing[2])
-        minSpacing = newSpacing[0];
-    else if (newSpacing[1] < newSpacing[2])
-        minSpacing = newSpacing[1];
-    else
-        minSpacing = newSpacing[2];
-
     vtkSmartPointer<vtkPolyData> fiberPolyData = m_FiberBundle->GetFiberPolyData();
-    vtkSmartPointer<vtkCellArray> vLines = fiberPolyData->GetLines();
-    vLines->InitTraversal();
 
     int numFibers = m_FiberBundle->GetNumFibers();
     boost::progress_display disp(numFibers);
     for( int i=0; i<numFibers; i++ )
     {
         ++disp;
-      vtkIdType   numPoints(0);
-      vtkIdType*  points(NULL);
-      vLines->GetNextCell ( numPoints, points );
+      vtkCell* cell = fiberPolyData->GetCell(i);
+      int numPoints = cell->GetNumberOfPoints();
+      vtkPoints* points = cell->GetPoints();
 
       // fill output image
       if (numPoints>0)
       {
-        itk::Point<float, 3> vertex = GetItkPoint(fiberPolyData->GetPoint(points[0]));
+        itk::Point<float, 3> vertex = mitk::imv::GetItkPoint(points->GetPoint(0));
         itk::Index<3> index;
         outImage->TransformPhysicalPointToIndex(vertex, index);
         if (upsampledRegion.IsInside(index))
+        {
           if (m_BinaryOutput)
-              outImage->SetPixel(index, 1);
+          {
+            outImage->SetPixel(index, 1);
+          }
           else
-              outImage->SetPixel(index, outImage->GetPixel(index)+1);
+          {
+            outImage->SetPixel(index, outImage->GetPixel(index)+1);
+          }
+        }
       }
 
       if (numPoints>=2)
       {
-        itk::Point<float, 3> vertex = GetItkPoint(fiberPolyData->GetPoint(points[numPoints-1]));
+        itk::Point<float, 3> vertex = mitk::imv::GetItkPoint(points->GetPoint(numPoints-1));
         itk::Index<3> index;
         outImage->TransformPhysicalPointToIndex(vertex, index);
         if (upsampledRegion.IsInside(index))
+        {
           if (m_BinaryOutput)
+          {
               outImage->SetPixel(index, 1);
+          }
           else
+          {
               outImage->SetPixel(index, outImage->GetPixel(index)+1);
+          }
+        }
       }
     }
 

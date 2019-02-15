@@ -26,38 +26,31 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QMessageBox>
 
 // MITK
-#include <mitkNodePredicateProperty.h>
+#include <mitkNodePredicateDataType.h>
+#include <mitkNodePredicateDimension.h>
+#include <mitkNodePredicateAnd.h>
 #include <mitkImageCast.h>
-#include <mitkPointSet.h>
-#include <mitkPlanarCircle.h>
-#include <mitkPlanarPolygon.h>
-#include <mitkPlanarRectangle.h>
-#include <mitkPlanarFigureInteractor.h>
-#include <mitkImageAccessByItk.h>
-#include <mitkDataNodeObject.h>
-#include <mitkTensorImage.h>
+#include <mitkPeakImage.h>
+#include <mitkLabelSetImage.h>
+#include <mitkDICOMSegmentationConstants.h>
+#include <mitkDICOMSegmentationPropertyHelper.cpp>
 
 // ITK
-#include <itkResampleImageFilter.h>
-#include <itkGaussianInterpolateImageFunction.h>
-#include <itkImageRegionIteratorWithIndex.h>
-#include <itkTractsToFiberEndingsImageFilter.h>
 #include <itkTractDensityImageFilter.h>
-#include <itkImageRegion.h>
 #include <itkTractsToRgbaImageFilter.h>
 #include <itkTractsToVectorImageFilter.h>
+#include <itkTractsToFiberEndingsImageFilter.h>
 
-#include <math.h>
-#include <boost/lexical_cast.hpp>
+#include <mitkLexicalCast.h>
 
 const std::string QmitkFiberQuantificationView::VIEW_ID = "org.mitk.views.fiberquantification";
-const std::string id_DataManager = "org.mitk.views.datamanager";
 using namespace mitk;
 
 QmitkFiberQuantificationView::QmitkFiberQuantificationView()
-    : QmitkAbstractView()
-    , m_Controls( 0 )
-    , m_UpsamplingFactor(5)
+  : QmitkAbstractView()
+  , m_Controls( 0 )
+  , m_UpsamplingFactor(5)
+  , m_Visible(false)
 {
 
 }
@@ -70,16 +63,49 @@ QmitkFiberQuantificationView::~QmitkFiberQuantificationView()
 
 void QmitkFiberQuantificationView::CreateQtPartControl( QWidget *parent )
 {
-    // build up qt view, unless already done
-    if ( !m_Controls )
-    {
-        // create GUI widgets from the Qt Designer's .ui file
-        m_Controls = new Ui::QmitkFiberQuantificationViewControls;
-        m_Controls->setupUi( parent );
+  // build up qt view, unless already done
+  if ( !m_Controls )
+  {
+    // create GUI widgets from the Qt Designer's .ui file
+    m_Controls = new Ui::QmitkFiberQuantificationViewControls;
+    m_Controls->setupUi( parent );
 
-        connect( m_Controls->m_ProcessFiberBundleButton, SIGNAL(clicked()), this, SLOT(ProcessSelectedBundles()) );
-        connect( m_Controls->m_ExtractFiberPeaks, SIGNAL(clicked()), this, SLOT(CalculateFiberDirections()) );
-    }
+    connect( m_Controls->m_ProcessFiberBundleButton, SIGNAL(clicked()), this, SLOT(ProcessSelectedBundles()) );
+    connect( m_Controls->m_ExtractFiberPeaks, SIGNAL(clicked()), this, SLOT(CalculateFiberDirections()) );
+
+    m_Controls->m_TractBox->SetDataStorage(this->GetDataStorage());
+    mitk::TNodePredicateDataType<mitk::FiberBundle>::Pointer isFib = mitk::TNodePredicateDataType<mitk::FiberBundle>::New();
+    m_Controls->m_TractBox->SetPredicate( isFib );
+
+    m_Controls->m_ImageBox->SetDataStorage(this->GetDataStorage());
+    m_Controls->m_ImageBox->SetZeroEntryText("--");
+    mitk::TNodePredicateDataType<mitk::Image>::Pointer isImagePredicate = mitk::TNodePredicateDataType<mitk::Image>::New();
+    mitk::NodePredicateDimension::Pointer is3D = mitk::NodePredicateDimension::New(3);
+    m_Controls->m_ImageBox->SetPredicate( mitk::NodePredicateAnd::New(isImagePredicate, is3D) );
+
+    connect( (QObject*)(m_Controls->m_TractBox), SIGNAL(currentIndexChanged(int)), this, SLOT(UpdateGui()));
+    connect( (QObject*)(m_Controls->m_ImageBox), SIGNAL(currentIndexChanged(int)), this, SLOT(UpdateGui()));
+  }
+}
+
+void QmitkFiberQuantificationView::Activated()
+{
+
+}
+
+void QmitkFiberQuantificationView::Deactivated()
+{
+
+}
+
+void QmitkFiberQuantificationView::Visible()
+{
+  m_Visible = true;
+}
+
+void QmitkFiberQuantificationView::Hidden()
+{
+  m_Visible = false;
 }
 
 void QmitkFiberQuantificationView::SetFocus()
@@ -89,309 +115,251 @@ void QmitkFiberQuantificationView::SetFocus()
 
 void QmitkFiberQuantificationView::CalculateFiberDirections()
 {
-    typedef itk::Image<unsigned char, 3>                                            ItkUcharImgType;
-    typedef itk::Image< itk::Vector< float, 3>, 3 >                                 ItkDirectionImage3DType;
-    typedef itk::VectorContainer< unsigned int, ItkDirectionImage3DType::Pointer >  ItkDirectionImageContainerType;
+  typedef itk::Image<unsigned char, 3>                                            ItkUcharImgType;
 
-    // load fiber bundle
-    mitk::FiberBundle::Pointer inputTractogram = dynamic_cast<mitk::FiberBundle*>(m_SelectedFB.back()->GetData());
+  // load fiber bundle
+  mitk::FiberBundle::Pointer inputTractogram = dynamic_cast<mitk::FiberBundle*>(m_SelectedFB.back()->GetData());
 
-    itk::TractsToVectorImageFilter<float>::Pointer fOdfFilter = itk::TractsToVectorImageFilter<float>::New();
-    if (m_SelectedImage.IsNotNull())
-    {
-        ItkUcharImgType::Pointer itkMaskImage = ItkUcharImgType::New();
-        mitk::CastToItkImage<ItkUcharImgType>(m_SelectedImage, itkMaskImage);
-        fOdfFilter->SetMaskImage(itkMaskImage);
-    }
+  itk::TractsToVectorImageFilter<float>::Pointer fOdfFilter = itk::TractsToVectorImageFilter<float>::New();
+  if (m_SelectedImage.IsNotNull())
+  {
+    ItkUcharImgType::Pointer itkMaskImage = ItkUcharImgType::New();
+    mitk::CastToItkImage<ItkUcharImgType>(m_SelectedImage, itkMaskImage);
+    fOdfFilter->SetMaskImage(itkMaskImage);
+  }
 
-    // extract directions from fiber bundle
-    fOdfFilter->SetFiberBundle(inputTractogram);
-    fOdfFilter->SetAngularThreshold(cos(m_Controls->m_AngularThreshold->value()*M_PI/180));
-    fOdfFilter->SetNormalizeVectors(m_Controls->m_NormalizeDirectionsBox->isChecked());
-    fOdfFilter->SetUseWorkingCopy(true);
-    fOdfFilter->SetCreateDirectionImages(m_Controls->m_DirectionImagesBox->isChecked());
-    fOdfFilter->SetSizeThreshold(m_Controls->m_PeakThreshold->value());
-    fOdfFilter->SetMaxNumDirections(m_Controls->m_MaxNumDirections->value());
-    fOdfFilter->Update();
+  // extract directions from fiber bundle
+  fOdfFilter->SetFiberBundle(inputTractogram);
+  fOdfFilter->SetAngularThreshold(cos(m_Controls->m_AngularThreshold->value()*itk::Math::pi/180));
+  switch (m_Controls->m_FiberDirNormBox->currentIndex())
+  {
+  case 0:
+    fOdfFilter->SetNormalizationMethod(itk::TractsToVectorImageFilter<float>::NormalizationMethods::GLOBAL_MAX);
+    break;
+  case 1:
+    fOdfFilter->SetNormalizationMethod(itk::TractsToVectorImageFilter<float>::NormalizationMethods::SINGLE_VEC_NORM);
+    break;
+  case 2:
+    fOdfFilter->SetNormalizationMethod(itk::TractsToVectorImageFilter<float>::NormalizationMethods::MAX_VEC_NORM);
+    break;
+  }
+  fOdfFilter->SetSizeThreshold(m_Controls->m_PeakThreshold->value());
+  fOdfFilter->SetMaxNumDirections(m_Controls->m_MaxNumDirections->value());
+  fOdfFilter->Update();
 
-    QString name = m_SelectedFB.back()->GetName().c_str();
+  QString name = m_SelectedFB.back()->GetName().c_str();
 
-    if (m_Controls->m_VectorFieldBox->isChecked())
-    {
-        float minSpacing = 1;
-        if (m_SelectedImage.IsNotNull())
-        {
-            mitk::Vector3D outImageSpacing = m_SelectedImage->GetGeometry()->GetSpacing();
+  if (m_Controls->m_NumDirectionsBox->isChecked())
+  {
+    mitk::Image::Pointer mitkImage = mitk::Image::New();
+    mitkImage->InitializeByItk( fOdfFilter->GetNumDirectionsImage().GetPointer() );
+    mitkImage->SetVolume( fOdfFilter->GetNumDirectionsImage()->GetBufferPointer() );
 
-            if(outImageSpacing[0]<outImageSpacing[1] && outImageSpacing[0]<outImageSpacing[2])
-                minSpacing = outImageSpacing[0];
-            else if (outImageSpacing[1] < outImageSpacing[2])
-                minSpacing = outImageSpacing[1];
-            else
-                minSpacing = outImageSpacing[2];
-        }
+    mitk::DataNode::Pointer node = mitk::DataNode::New();
+    node->SetData(mitkImage);
+    node->SetName((name+"_NUM_DIRECTIONS").toStdString().c_str());
+    GetDataStorage()->Add(node, m_SelectedFB.back());
+  }
 
-        mitk::FiberBundle::Pointer directions = fOdfFilter->GetOutputFiberBundle();
-        mitk::DataNode::Pointer node = mitk::DataNode::New();
-        node->SetData(directions);
-        node->SetName((name+"_VECTOR_FIELD").toStdString().c_str());
-        node->SetProperty("Fiber2DSliceThickness", mitk::FloatProperty::New(minSpacing));
-        node->SetProperty("Fiber2DfadeEFX", mitk::BoolProperty::New(false));
-        node->SetProperty("color", mitk::ColorProperty::New(1.0f, 1.0f, 1.0f));
+  Image::Pointer mitkImage = dynamic_cast<Image*>(PeakImage::New().GetPointer());
+  mitk::CastToMitkImage(fOdfFilter->GetDirectionImage(), mitkImage);
+  mitkImage->SetVolume(fOdfFilter->GetDirectionImage()->GetBufferPointer());
 
-        GetDataStorage()->Add(node, m_SelectedFB.back());
-    }
-
-    if (m_Controls->m_NumDirectionsBox->isChecked())
-    {
-        mitk::Image::Pointer mitkImage = mitk::Image::New();
-        mitkImage->InitializeByItk( fOdfFilter->GetNumDirectionsImage().GetPointer() );
-        mitkImage->SetVolume( fOdfFilter->GetNumDirectionsImage()->GetBufferPointer() );
-
-        mitk::DataNode::Pointer node = mitk::DataNode::New();
-        node->SetData(mitkImage);
-        node->SetName((name+"_NUM_DIRECTIONS").toStdString().c_str());
-        GetDataStorage()->Add(node, m_SelectedFB.back());
-    }
-
-    if (m_Controls->m_DirectionImagesBox->isChecked())
-    {
-        itk::TractsToVectorImageFilter<float>::ItkDirectionImageType::Pointer itkImg = fOdfFilter->GetDirectionImage();
-
-        if (itkImg.IsNull())
-            return;
-
-        mitk::Image::Pointer mitkImage = mitk::Image::New();
-        mitkImage->InitializeByItk( itkImg.GetPointer() );
-        mitkImage->SetVolume( itkImg->GetBufferPointer() );
-
-        mitk::DataNode::Pointer node = mitk::DataNode::New();
-        node->SetData(mitkImage);
-        node->SetName( (name+"_DIRECTIONS").toStdString().c_str());
-        GetDataStorage()->Add(node, m_SelectedFB.back());
-    }
+  mitk::DataNode::Pointer node = mitk::DataNode::New();
+  node->SetData(mitkImage);
+  node->SetName( (name+"_DIRECTIONS").toStdString().c_str());
+  GetDataStorage()->Add(node, m_SelectedFB.back());
 }
 
 void QmitkFiberQuantificationView::UpdateGui()
 {
-    m_Controls->m_ProcessFiberBundleButton->setEnabled(!m_SelectedFB.empty());
-    m_Controls->m_ExtractFiberPeaks->setEnabled(!m_SelectedFB.empty());
+  m_SelectedFB.clear();
+  if (m_Controls->m_TractBox->GetSelectedNode().IsNotNull())
+    m_SelectedFB.push_back(m_Controls->m_TractBox->GetSelectedNode());
+
+  m_SelectedImage = nullptr;
+  if (m_Controls->m_ImageBox->GetSelectedNode().IsNotNull())
+    m_SelectedImage = dynamic_cast<mitk::Image*>(m_Controls->m_ImageBox->GetSelectedNode()->GetData());
+
+  m_Controls->m_ProcessFiberBundleButton->setEnabled(!m_SelectedFB.empty());
+  m_Controls->m_ExtractFiberPeaks->setEnabled(!m_SelectedFB.empty());
 }
 
-void QmitkFiberQuantificationView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& nodes)
+void QmitkFiberQuantificationView::OnSelectionChanged(berry::IWorkbenchPart::Pointer /*part*/, const QList<mitk::DataNode::Pointer>& )
 {
-    //reset existing Vectors containing FiberBundles and PlanarFigures from a previous selection
-    m_SelectedFB.clear();
-    m_SelectedSurfaces.clear();
-    m_SelectedImage = NULL;
-
-    for (mitk::DataNode::Pointer node: nodes)
-    {
-        if ( dynamic_cast<mitk::FiberBundle*>(node->GetData()) )
-        {
-            m_SelectedFB.push_back(node);
-        }
-        else if (dynamic_cast<mitk::Image*>(node->GetData()))
-            m_SelectedImage = dynamic_cast<mitk::Image*>(node->GetData());
-        else if (dynamic_cast<mitk::Surface*>(node->GetData()))
-        {
-            m_SelectedSurfaces.push_back(dynamic_cast<mitk::Surface*>(node->GetData()));
-        }
-    }
-    UpdateGui();
-    GenerateStats();
-}
-
-void QmitkFiberQuantificationView::GenerateStats()
-{
-    if ( m_SelectedFB.empty() )
-        return;
-
-    QString stats("");
-
-    for( int i=0; i<m_SelectedFB.size(); i++ )
-    {
-        mitk::DataNode::Pointer node = m_SelectedFB[i];
-        if (node.IsNotNull() && dynamic_cast<mitk::FiberBundle*>(node->GetData()))
-        {
-            if (i>0)
-                stats += "\n-----------------------------\n";
-            stats += QString(node->GetName().c_str()) + "\n";
-            mitk::FiberBundle::Pointer fib = dynamic_cast<mitk::FiberBundle*>(node->GetData());
-            stats += "Number of fibers: "+ QString::number(fib->GetNumFibers()) + "\n";
-            stats += "Number of points: "+ QString::number(fib->GetNumberOfPoints()) + "\n";
-            stats += "Min. length:         "+ QString::number(fib->GetMinFiberLength(),'f',1) + " mm\n";
-            stats += "Max. length:         "+ QString::number(fib->GetMaxFiberLength(),'f',1) + " mm\n";
-            stats += "Mean length:         "+ QString::number(fib->GetMeanFiberLength(),'f',1) + " mm\n";
-            stats += "Median length:       "+ QString::number(fib->GetMedianFiberLength(),'f',1) + " mm\n";
-            stats += "Standard deviation:  "+ QString::number(fib->GetLengthStDev(),'f',1) + " mm\n";
-
-            vtkSmartPointer<vtkFloatArray> weights = fib->GetFiberWeights();
-            if (weights!=NULL)
-            {
-                stats += "Detected fiber weights\n";
-//                    stats += "Detected fiber weights:\n";
-//                    float weight=-1;
-//                    int c = 0;
-//                    for (int i=0; i<weights->GetSize(); i++)
-//                        if (!mitk::Equal(weights->GetValue(i),weight,0.00001))
-//                        {
-//                            c++;
-//                            if (weight>0)
-//                                stats += QString::number(i) + ":  "+ QString::number(weights->GetValue(i)) + "\n";
-//                            stats += QString::number(c) + ". Fibers " + QString::number(i+1) + "-";
-//                            weight = weights->GetValue(i);
-//                        }
-//                    stats += QString::number(weights->GetSize()) + ":  "+ QString::number(weight) + "\n";
-            }
-            else
-                stats += "No fiber weight array found.\n";
-        }
-    }
-    this->m_Controls->m_StatsTextEdit->setText(stats);
+  UpdateGui();
 }
 
 void QmitkFiberQuantificationView::ProcessSelectedBundles()
 {
-    if ( m_SelectedFB.empty() ){
-        QMessageBox::information( NULL, "Warning", "No fibe bundle selected!");
-        MITK_WARN("QmitkFiberQuantificationView") << "no fibe bundle selected";
-        return;
-    }
+  if ( m_SelectedFB.empty() ){
+    QMessageBox::information( nullptr, "Warning", "No fibe bundle selected!");
+    MITK_WARN("QmitkFiberQuantificationView") << "no fibe bundle selected";
+    return;
+  }
 
-    int generationMethod = m_Controls->m_GenerationBox->currentIndex();
+  int generationMethod = m_Controls->m_GenerationBox->currentIndex();
 
-    for( int i=0; i<m_SelectedFB.size(); i++ )
+  for( unsigned int i=0; i<m_SelectedFB.size(); i++ )
+  {
+    mitk::DataNode::Pointer node = m_SelectedFB[i];
+    if (node.IsNotNull() && dynamic_cast<mitk::FiberBundle*>(node->GetData()))
     {
-        mitk::DataNode::Pointer node = m_SelectedFB[i];
-        if (node.IsNotNull() && dynamic_cast<mitk::FiberBundle*>(node->GetData()))
-        {
-            mitk::FiberBundle::Pointer fib = dynamic_cast<mitk::FiberBundle*>(node->GetData());
-            QString name(node->GetName().c_str());
-            DataNode::Pointer newNode = NULL;
-            switch(generationMethod){
-            case 0:
-                newNode = GenerateTractDensityImage(fib, false, true);
-                name += "_TDI";
-                break;
-            case 1:
-                newNode = GenerateTractDensityImage(fib, false, false);
-                name += "_TDI";
-                break;
-            case 2:
-                newNode = GenerateTractDensityImage(fib, true, false);
-                name += "_envelope";
-                break;
-            case 3:
-                newNode = GenerateColorHeatmap(fib);
-                break;
-            case 4:
-                newNode = GenerateFiberEndingsImage(fib);
-                name += "_fiber_endings";
-                break;
-            case 5:
-                newNode = GenerateFiberEndingsPointSet(fib);
-                name += "_fiber_endings";
-                break;
-            }
-            if (newNode.IsNotNull())
-            {
-                newNode->SetName(name.toStdString());
-                GetDataStorage()->Add(newNode);
-            }
-        }
+      mitk::FiberBundle::Pointer fib = dynamic_cast<mitk::FiberBundle*>(node->GetData());
+      QString name(node->GetName().c_str());
+      DataNode::Pointer newNode = nullptr;
+      switch(generationMethod){
+      case 0:
+        newNode = GenerateTractDensityImage(fib, false, true);
+        name += "_TDI";
+        break;
+      case 1:
+        newNode = GenerateTractDensityImage(fib, false, false);
+        name += "_TDI";
+        break;
+      case 2:
+        newNode = GenerateTractDensityImage(fib, true, false);
+        name += "_envelope";
+        break;
+      case 3:
+        newNode = GenerateColorHeatmap(fib);
+        break;
+      case 4:
+        newNode = GenerateFiberEndingsImage(fib);
+        name += "_fiber_endings";
+        break;
+      case 5:
+        newNode = GenerateFiberEndingsPointSet(fib);
+        name += "_fiber_endings";
+        break;
+      }
+      if (newNode.IsNotNull())
+      {
+        newNode->SetName(name.toStdString());
+        GetDataStorage()->Add(newNode);
+      }
     }
+  }
 }
 
 // generate pointset displaying the fiber endings
 mitk::DataNode::Pointer QmitkFiberQuantificationView::GenerateFiberEndingsPointSet(mitk::FiberBundle::Pointer fib)
 {
-    mitk::PointSet::Pointer pointSet = mitk::PointSet::New();
-    vtkSmartPointer<vtkPolyData> fiberPolyData = fib->GetFiberPolyData();
-    vtkSmartPointer<vtkCellArray> vLines = fiberPolyData->GetLines();
-    vLines->InitTraversal();
+  mitk::PointSet::Pointer pointSet = mitk::PointSet::New();
+  vtkSmartPointer<vtkPolyData> fiberPolyData = fib->GetFiberPolyData();
 
-    int count = 0;
-    int numFibers = fib->GetNumFibers();
-    for( int i=0; i<numFibers; i++ )
+  int count = 0;
+  int numFibers = fib->GetNumFibers();
+  for( int i=0; i<numFibers; i++ )
+  {
+    vtkCell* cell = fiberPolyData->GetCell(i);
+    int numPoints = cell->GetNumberOfPoints();
+    vtkPoints* points = cell->GetPoints();
+
+    if (numPoints>0)
     {
-        vtkIdType   numPoints(0);
-        vtkIdType*  points(NULL);
-        vLines->GetNextCell ( numPoints, points );
-
-        if (numPoints>0)
-        {
-            double* point = fiberPolyData->GetPoint(points[0]);
-            itk::Point<float,3> itkPoint;
-            itkPoint[0] = point[0];
-            itkPoint[1] = point[1];
-            itkPoint[2] = point[2];
-            pointSet->InsertPoint(count, itkPoint);
-            count++;
-        }
-        if (numPoints>2)
-        {
-            double* point = fiberPolyData->GetPoint(points[numPoints-1]);
-            itk::Point<float,3> itkPoint;
-            itkPoint[0] = point[0];
-            itkPoint[1] = point[1];
-            itkPoint[2] = point[2];
-            pointSet->InsertPoint(count, itkPoint);
-            count++;
-        }
+      double* point = points->GetPoint(0);
+      itk::Point<float,3> itkPoint = mitk::imv::GetItkPoint(point);
+      pointSet->InsertPoint(count, itkPoint);
+      count++;
     }
+    if (numPoints>2)
+    {
+      double* point = points->GetPoint(numPoints-1);
+      itk::Point<float,3> itkPoint = mitk::imv::GetItkPoint(point);
+      pointSet->InsertPoint(count, itkPoint);
+      count++;
+    }
+  }
 
-    mitk::DataNode::Pointer node = mitk::DataNode::New();
-    node->SetData( pointSet );
-    return node;
+  mitk::DataNode::Pointer node = mitk::DataNode::New();
+  node->SetData( pointSet );
+  return node;
 }
 
 // generate image displaying the fiber endings
 mitk::DataNode::Pointer QmitkFiberQuantificationView::GenerateFiberEndingsImage(mitk::FiberBundle::Pointer fib)
 {
-    typedef unsigned char OutPixType;
-    typedef itk::Image<OutPixType,3> OutImageType;
+  typedef unsigned int OutPixType;
+  typedef itk::Image<OutPixType,3> OutImageType;
 
-    typedef itk::TractsToFiberEndingsImageFilter< OutImageType > ImageGeneratorType;
-    ImageGeneratorType::Pointer generator = ImageGeneratorType::New();
-    generator->SetFiberBundle(fib);
-    generator->SetUpsamplingFactor(m_Controls->m_UpsamplingSpinBox->value());
-    if (m_SelectedImage.IsNotNull())
-    {
-        OutImageType::Pointer itkImage = OutImageType::New();
-        CastToItkImage(m_SelectedImage, itkImage);
-        generator->SetInputImage(itkImage);
-        generator->SetUseImageGeometry(true);
-    }
-    generator->Update();
+  typedef itk::TractsToFiberEndingsImageFilter< OutImageType > ImageGeneratorType;
+  ImageGeneratorType::Pointer generator = ImageGeneratorType::New();
+  generator->SetFiberBundle(fib);
+  generator->SetUpsamplingFactor(m_Controls->m_UpsamplingSpinBox->value());
+  if (m_SelectedImage.IsNotNull())
+  {
+    OutImageType::Pointer itkImage = OutImageType::New();
+    CastToItkImage(m_SelectedImage, itkImage);
+    generator->SetInputImage(itkImage);
+    generator->SetUseImageGeometry(true);
+  }
+  generator->Update();
 
-    // get output image
-    OutImageType::Pointer outImg = generator->GetOutput();
-    mitk::Image::Pointer img = mitk::Image::New();
-    img->InitializeByItk(outImg.GetPointer());
-    img->SetVolume(outImg->GetBufferPointer());
+  // get output image
+  OutImageType::Pointer outImg = generator->GetOutput();
+  mitk::Image::Pointer img = mitk::Image::New();
+  img->InitializeByItk(outImg.GetPointer());
+  img->SetVolume(outImg->GetBufferPointer());
 
-    // init data node
-    mitk::DataNode::Pointer node = mitk::DataNode::New();
-    node->SetData(img);
-    return node;
+  // init data node
+  mitk::DataNode::Pointer node = mitk::DataNode::New();
+  node->SetData(img);
+  return node;
 }
 
 // generate rgba heatmap from fiber bundle
 mitk::DataNode::Pointer QmitkFiberQuantificationView::GenerateColorHeatmap(mitk::FiberBundle::Pointer fib)
 {
-    typedef itk::RGBAPixel<unsigned char> OutPixType;
+  typedef itk::RGBAPixel<unsigned char> OutPixType;
+  typedef itk::Image<OutPixType, 3> OutImageType;
+  typedef itk::TractsToRgbaImageFilter< OutImageType > ImageGeneratorType;
+  ImageGeneratorType::Pointer generator = ImageGeneratorType::New();
+  generator->SetFiberBundle(fib);
+  generator->SetUpsamplingFactor(m_Controls->m_UpsamplingSpinBox->value());
+  if (m_SelectedImage.IsNotNull())
+  {
+    itk::Image<unsigned char, 3>::Pointer itkImage = itk::Image<unsigned char, 3>::New();
+    CastToItkImage(m_SelectedImage, itkImage);
+    generator->SetInputImage(itkImage);
+    generator->SetUseImageGeometry(true);
+  }
+  generator->Update();
+
+  // get output image
+  typedef itk::Image<OutPixType,3> OutType;
+  OutType::Pointer outImg = generator->GetOutput();
+  mitk::Image::Pointer img = mitk::Image::New();
+  img->InitializeByItk(outImg.GetPointer());
+  img->SetVolume(outImg->GetBufferPointer());
+
+  // init data node
+  mitk::DataNode::Pointer node = mitk::DataNode::New();
+  node->SetData(img);
+  return node;
+}
+
+// generate tract density image from fiber bundle
+mitk::DataNode::Pointer QmitkFiberQuantificationView::GenerateTractDensityImage(mitk::FiberBundle::Pointer fib, bool binary, bool absolute)
+{
+  mitk::DataNode::Pointer node = mitk::DataNode::New();
+  if (binary)
+  {
+    typedef unsigned char OutPixType;
     typedef itk::Image<OutPixType, 3> OutImageType;
-    typedef itk::TractsToRgbaImageFilter< OutImageType > ImageGeneratorType;
-    ImageGeneratorType::Pointer generator = ImageGeneratorType::New();
+
+    itk::TractDensityImageFilter< OutImageType >::Pointer generator = itk::TractDensityImageFilter< OutImageType >::New();
     generator->SetFiberBundle(fib);
+    generator->SetBinaryOutput(binary);
+    generator->SetOutputAbsoluteValues(absolute);
     generator->SetUpsamplingFactor(m_Controls->m_UpsamplingSpinBox->value());
     if (m_SelectedImage.IsNotNull())
     {
-        itk::Image<unsigned char, 3>::Pointer itkImage = itk::Image<unsigned char, 3>::New();
-        CastToItkImage(m_SelectedImage, itkImage);
-        generator->SetInputImage(itkImage);
-        generator->SetUseImageGeometry(true);
+      OutImageType::Pointer itkImage = OutImageType::New();
+      CastToItkImage(m_SelectedImage, itkImage);
+      generator->SetInputImage(itkImage);
+      generator->SetUseImageGeometry(true);
+
     }
     generator->Update();
 
@@ -402,76 +370,56 @@ mitk::DataNode::Pointer QmitkFiberQuantificationView::GenerateColorHeatmap(mitk:
     img->InitializeByItk(outImg.GetPointer());
     img->SetVolume(outImg->GetBufferPointer());
 
-    // init data node
-    mitk::DataNode::Pointer node = mitk::DataNode::New();
-    node->SetData(img);
-    return node;
-}
 
-// generate tract density image from fiber bundle
-mitk::DataNode::Pointer QmitkFiberQuantificationView::GenerateTractDensityImage(mitk::FiberBundle::Pointer fib, bool binary, bool absolute)
-{
-    mitk::DataNode::Pointer node = mitk::DataNode::New();
-    if (binary)
+    if (m_SelectedImage.IsNotNull())
     {
-        typedef unsigned char OutPixType;
-        typedef itk::Image<OutPixType, 3> OutImageType;
+      mitk::LabelSetImage::Pointer multilabelImage = mitk::LabelSetImage::New();
+      multilabelImage->Initialize(m_SelectedImage);
+      multilabelImage->InitializeByLabeledImage(img);
+      multilabelImage->GetActiveLabelSet()->SetActiveLabel(1);
+      mitk::Label::Pointer label = multilabelImage->GetActiveLabel();
+      label->SetName("Tractogram");
 
-        itk::TractDensityImageFilter< OutImageType >::Pointer generator = itk::TractDensityImageFilter< OutImageType >::New();
-        generator->SetFiberBundle(fib);
-        generator->SetBinaryOutput(binary);
-        generator->SetOutputAbsoluteValues(absolute);
-        generator->SetUpsamplingFactor(m_Controls->m_UpsamplingSpinBox->value());
-        if (m_SelectedImage.IsNotNull())
-        {
-            OutImageType::Pointer itkImage = OutImageType::New();
-            CastToItkImage(m_SelectedImage, itkImage);
-            generator->SetInputImage(itkImage);
-            generator->SetUseImageGeometry(true);
-
-        }
-        generator->Update();
-
-        // get output image
-        typedef itk::Image<OutPixType,3> OutType;
-        OutType::Pointer outImg = generator->GetOutput();
-        mitk::Image::Pointer img = mitk::Image::New();
-        img->InitializeByItk(outImg.GetPointer());
-        img->SetVolume(outImg->GetBufferPointer());
-
-        // init data node
-        node->SetData(img);
+      // init data node
+      node->SetData(multilabelImage);
     }
     else
     {
-        typedef float OutPixType;
-        typedef itk::Image<OutPixType, 3> OutImageType;
-
-        itk::TractDensityImageFilter< OutImageType >::Pointer generator = itk::TractDensityImageFilter< OutImageType >::New();
-        generator->SetFiberBundle(fib);
-        generator->SetBinaryOutput(binary);
-        generator->SetOutputAbsoluteValues(absolute);
-        generator->SetUpsamplingFactor(m_Controls->m_UpsamplingSpinBox->value());
-        if (m_SelectedImage.IsNotNull())
-        {
-            OutImageType::Pointer itkImage = OutImageType::New();
-            CastToItkImage(m_SelectedImage, itkImage);
-            generator->SetInputImage(itkImage);
-            generator->SetUseImageGeometry(true);
-
-        }
-        //generator->SetDoFiberResampling(false);
-        generator->Update();
-
-        // get output image
-        typedef itk::Image<OutPixType,3> OutType;
-        OutType::Pointer outImg = generator->GetOutput();
-        mitk::Image::Pointer img = mitk::Image::New();
-        img->InitializeByItk(outImg.GetPointer());
-        img->SetVolume(outImg->GetBufferPointer());
-
-        // init data node
-        node->SetData(img);
+      // init data node
+      node->SetData(img);
     }
-    return node;
+
+  }
+  else
+  {
+    typedef float OutPixType;
+    typedef itk::Image<OutPixType, 3> OutImageType;
+
+    itk::TractDensityImageFilter< OutImageType >::Pointer generator = itk::TractDensityImageFilter< OutImageType >::New();
+    generator->SetFiberBundle(fib);
+    generator->SetBinaryOutput(binary);
+    generator->SetOutputAbsoluteValues(absolute);
+    generator->SetUpsamplingFactor(m_Controls->m_UpsamplingSpinBox->value());
+    if (m_SelectedImage.IsNotNull())
+    {
+      OutImageType::Pointer itkImage = OutImageType::New();
+      CastToItkImage(m_SelectedImage, itkImage);
+      generator->SetInputImage(itkImage);
+      generator->SetUseImageGeometry(true);
+
+    }
+    //generator->SetDoFiberResampling(false);
+    generator->Update();
+
+    // get output image
+    typedef itk::Image<OutPixType,3> OutType;
+    OutType::Pointer outImg = generator->GetOutput();
+    mitk::Image::Pointer img = mitk::Image::New();
+    img->InitializeByItk(outImg.GetPointer());
+    img->SetVolume(outImg->GetBufferPointer());
+
+    // init data node
+    node->SetData(img);
+  }
+  return node;
 }

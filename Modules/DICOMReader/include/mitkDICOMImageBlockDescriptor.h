@@ -25,6 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkImage.h"
 #include "mitkProperties.h"
 #include "mitkWeakPointer.h"
+#include "mitkIPropertyProvider.h"
 
 #include "mitkGantryTiltInformation.h"
 
@@ -45,14 +46,14 @@ namespace mitk
   public:
     typedef DICOMCachedValueLookupTable Self;
     typedef GenericLookupTable< DICOMCachedValueInfo >   Superclass;
-    virtual const char *GetNameOfClass() const
+    const char *GetNameOfClass() const override
     {
       return "DICOMCachedValueLookupTable";
     }
 
     DICOMCachedValueLookupTable() {}
-    virtual Superclass& operator=(const Superclass& other) { return Superclass::operator=(other); }
-    virtual ~DICOMCachedValueLookupTable() {}
+    Superclass& operator=(const Superclass& other) override { return Superclass::operator=(other); }
+    ~DICOMCachedValueLookupTable() override {}
   };
 
   /**
@@ -64,7 +65,7 @@ namespace mitk
      be loaded by the file reader.
 
      The descriptor contains the following information:
-     - the mitk::Image itself. This will be NULL after analysis and only be present after actual loading.
+     - the mitk::Image itself. This will be nullptr after analysis and only be present after actual loading.
      - a list of frames (mostly: filenames) that went into composition of the mitk::Image.
      - an assessment of the reader's ability to load this set of files (ReaderImplementationLevel)
      - this can be used for reader selection when one reader is able to load an image with correct colors and the other is able to produce only gray values, for example
@@ -77,12 +78,12 @@ namespace mitk
      - whether pixel spacing is meant to be in-patient or on-detector (mitk::PixelSpacingInterpretation)
      - details about a possible gantry tilt (intended for use by file readers, may be hidden later)
      */
-  class MITKDICOMREADER_EXPORT DICOMImageBlockDescriptor
+  class MITKDICOMREADER_EXPORT DICOMImageBlockDescriptor: public IPropertyProvider
   {
   public:
 
     DICOMImageBlockDescriptor();
-    ~DICOMImageBlockDescriptor();
+    virtual ~DICOMImageBlockDescriptor();
 
     DICOMImageBlockDescriptor(const DICOMImageBlockDescriptor& other);
     DICOMImageBlockDescriptor& operator=(const DICOMImageBlockDescriptor& other);
@@ -121,6 +122,15 @@ namespace mitk
     void SetIntProperty(const std::string& key, int value);
     /// Convenience function around GetProperty()
     int GetIntProperty(const std::string& key, int defaultValue) const;
+
+    virtual BaseProperty::ConstPointer GetConstProperty(const std::string &propertyKey,
+      const std::string &contextName = "",
+      bool fallBackOnDefaultContext = true) const override;
+
+    virtual std::vector<std::string> GetPropertyKeys(const std::string &contextName = "",
+      bool includeDefaultContext = false) const override;
+
+    virtual std::vector<std::string> GetPropertyContextNames() const override;
 
   private:
 

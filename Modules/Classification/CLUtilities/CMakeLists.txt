@@ -1,7 +1,6 @@
 MITK_CREATE_MODULE(
-  DEPENDS MitkCore MitkCLCore
-  PACKAGE_DEPENDS PUBLIC Eigen
-  WARNINGS_AS_ERRORS
+  DEPENDS MitkCore MitkCLCore MitkCommandLine
+  PACKAGE_DEPENDS PUBLIC OpenMP|OpenMP_CXX Eigen
 )
 
 add_subdirectory(test)

@@ -54,12 +54,12 @@ public:
 
   QmitkImageNavigatorView();
 
-  virtual ~QmitkImageNavigatorView();
+  ~QmitkImageNavigatorView() override;
 
-  virtual void CreateQtPartControl(QWidget *parent) override;
+  void CreateQtPartControl(QWidget *parent) override;
 
-  virtual int GetSizeFlags(bool width) override;
-  virtual int ComputePreferredSize(bool width, int /*availableParallel*/, int /*availablePerpendicular*/, int preferredResult) override;
+  int GetSizeFlags(bool width) override;
+  int ComputePreferredSize(bool width, int /*availableParallel*/, int /*availablePerpendicular*/, int preferredResult) override;
 
 protected slots:
 
@@ -81,6 +81,7 @@ protected:
   void SetStepSize(int axis);
   void SetStepSize(int axis, double stepSize);
   int  GetClosestAxisIndex(mitk::Vector3D normal);
+  void SetVisibilityOfTimeSlider(std::size_t timeSteps);
 
   Ui::QmitkImageNavigatorViewControls m_Controls;
 

@@ -71,10 +71,9 @@ void mitk::FiberBundleTrackVisWriter::Write()
     try
     {
         const std::string& locale = "C";
-        const std::string& currLocale = setlocale( LC_ALL, NULL );
+        const std::string& currLocale = setlocale( LC_ALL, nullptr );
         setlocale(LC_ALL, locale.c_str());
 
-        std::locale previousLocale(out->getloc());
         std::locale I("C");
         out->imbue(I);
 
@@ -100,7 +99,7 @@ void mitk::FiberBundleTrackVisWriter::Write()
         trk.append(input.GetPointer());
 
         setlocale(LC_ALL, currLocale.c_str());
-        MITK_INFO << "Fiber bundle written";
+        MITK_INFO << "TrackVis Fiber bundle written to " << filename;
     }
     catch(...)
     {

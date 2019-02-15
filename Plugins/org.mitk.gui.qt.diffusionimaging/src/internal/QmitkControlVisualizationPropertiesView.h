@@ -28,6 +28,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "ui_QmitkControlVisualizationPropertiesViewControls.h"
 
 #include "mitkEnumerationProperty.h"
+#include <mitkILifecycleAwarePart.h>
+#include <QmitkSliceNavigationListener.h>
 
 /*!
  * \ingroup org_mitk_gui_qt_diffusionquantification_internal
@@ -36,7 +38,7 @@ See LICENSE.txt or http://www.mitk.org for details.
  *
  * Document your class here.
  */
-class QmitkControlVisualizationPropertiesView : public QmitkAbstractView//, public berry::ISizeProvider
+class QmitkControlVisualizationPropertiesView : public QmitkAbstractView, public mitk::ILifecycleAwarePart
 {
 
   friend struct CvpSelListener;
@@ -56,48 +58,44 @@ class QmitkControlVisualizationPropertiesView : public QmitkAbstractView//, publ
   /// \brief Creation of the connections of main and control widget
   virtual void CreateConnections();
 
-  ///
-  /// Sets the focus to an internal widget.
-  ///
-  virtual void SetFocus() override;
 
 protected slots:
 
   void VisibleOdfsON_S();
   void VisibleOdfsON_T();
   void VisibleOdfsON_C();
-
   void ShowMaxNumberChanged();
   void NormalizationDropdownChanged(int);
   void ScalingFactorChanged(double);
   void AdditionalScaling(int);
-  void ScalingCheckbox();
-
   void OnThickSlicesModeSelected( QAction* action );
   void OnTSNumChanged(int num);
-
-  void BundleRepresentationResetColoring();
+  void ResetColoring();
   void PlanarFigureFocus();
   void Fiber2DfadingEFX();
   void FiberSlicingThickness2D();
   void FiberSlicingUpdateLabel(int);
   void LineWidthChanged();
   void TubeRadiusChanged();
-
+  void RibbonWidthChanged();
   void SetInteractor();
-
+  void Toggle3DClipping(bool enabled=true);
+  void FlipPeaks();
   void Welcome();
-
-  /// \brief Slot function for switching tensor view between ODF q-balls and ellipsoids from tensors.
-  void OnTensorViewChanged();
+  void OnSliceChanged();
+  void SetColor();
+  void Toggle3DPeaks();
 
   /// \brief Slot function for switching colourisation mode of glyphs.
   void OnColourisationModeChanged();
 
-  /// \brief Slot function for switching glyph placement mode.
-  void OnRandomModeChanged();
-
 protected:
+
+  virtual void SetFocus() override;
+  virtual void Activated() override;
+  virtual void Deactivated() override;
+  virtual void Visible() override;
+  virtual void Hidden() override;
 
   virtual void NodeRemoved(const mitk::DataNode* node) override;
 
@@ -105,11 +103,12 @@ protected:
   virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   virtual void NodeAdded(const mitk::DataNode *node) override;
-  void SetFiberBundleCustomColor(const itk::EventObject& /*e*/);
-  void SetFiberBundleOpacity(const itk::EventObject& /*e*/);
+  void SetCustomColor(const itk::EventObject& /*e*/);
   bool IsPlaneRotated();
 
   void SliceRotation(const itk::EventObject&);
+  void Set3DClippingPlane(bool disable, mitk::DataNode *node, std::string plane);
+  void SetTs(int m_CurrentThickSlicesMode, int num, std::string render_window);
 
   Ui::QmitkControlVisualizationPropertiesViewControls* m_Controls;
 
@@ -132,7 +131,8 @@ protected:
   bool m_GlyIsOn_C;
   bool m_GlyIsOn_S;
 
-  int currentThickSlicesMode;
+  int m_CurrentThickSlicesMode;
+  int m_CurrentThickSlicesNum;
   QLabel* m_TSLabel;
   QMenu* m_MyMenu;
 
@@ -140,10 +140,12 @@ protected:
   mitk::DataNode::Pointer m_SelectedNode;
   mitk::DataNode* m_CurrentPickingNode;
 
-  unsigned long m_FiberBundleObserverTag;
-  unsigned long m_FiberBundleObserveOpacityTag;
+  unsigned long m_ColorPropertyObserverTag;
+  unsigned long m_OpacityPropertyObserverTag;
   mitk::ColorProperty::Pointer m_Color;
   mitk::FloatProperty::Pointer m_Opacity;
+
+  QmitkSliceNavigationListener  m_SliceChangeListener;
 };
 
 

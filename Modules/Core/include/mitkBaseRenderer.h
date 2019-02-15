@@ -78,9 +78,7 @@ namespace mitk
     {
       enum Type
       {
-        Standard = 0,  // no multi-sampling, no depth-peeling
-        MultiSampling, // multi-sampling (antialiasing), no depth-peeling
-        DepthPeeling   // no multi-sampling, depth-peeling is on (order-independant transparency)
+        Standard = 0
       };
     };
 
@@ -165,21 +163,21 @@ namespace mitk
     //##
     //## Depending of the type of the passed BaseGeometry more or less information can be extracted:
     //## \li if it is a PlaneGeometry (which is a sub-class of BaseGeometry), m_CurrentWorldPlaneGeometry is
-    //## also set to point to it. m_WorldTimeGeometry is set to NULL.
+    //## also set to point to it. m_WorldTimeGeometry is set to nullptr.
     //## \li if it is a TimeGeometry, m_WorldTimeGeometry is also set to point to it.
     //## If m_WorldTimeGeometry contains instances of SlicedGeometry3D, m_CurrentWorldPlaneGeometry is set to
     //## one of geometries stored in the SlicedGeometry3D according to the value of m_Slice;  otherwise
     //## a PlaneGeometry describing the top of the bounding-box of the BaseGeometry is set as the
     //## m_CurrentWorldPlaneGeometry.
     //## \li otherwise a PlaneGeometry describing the top of the bounding-box of the BaseGeometry
-    //## is set as the m_CurrentWorldPlaneGeometry. m_WorldTimeGeometry is set to NULL.
+    //## is set as the m_CurrentWorldPlaneGeometry. m_WorldTimeGeometry is set to nullptr.
     //## @todo add calculation of PlaneGeometry describing the top of the bounding-box of the BaseGeometry
     //## when the passed BaseGeometry is not sliced.
     //## \sa m_WorldGeometry
     //## \sa m_WorldTimeGeometry
     //## \sa m_CurrentWorldPlaneGeometry
-    virtual void SetWorldGeometry3D(BaseGeometry *geometry);
-    virtual void SetWorldTimeGeometry(mitk::TimeGeometry *geometry);
+    virtual void SetWorldGeometry3D(const BaseGeometry *geometry);
+    virtual void SetWorldTimeGeometry(const mitk::TimeGeometry *geometry);
 
     /**
     * \deprecatedSince{2013_09} Please use TimeGeometry instead of TimeSlicedGeometry. For more information see
@@ -187,7 +185,7 @@ namespace mitk
     */
     DEPRECATED(void SetWorldGeometry3D(TimeSlicedGeometry *geometry));
 
-    itkGetConstObjectMacro(WorldTimeGeometry, TimeGeometry) itkGetObjectMacro(WorldTimeGeometry, TimeGeometry)
+    itkGetConstObjectMacro(WorldTimeGeometry, TimeGeometry)
 
       //##Documentation
       //## @brief Get the current 3D-worldgeometry (m_CurrentWorldGeometry) used for 3D-rendering
@@ -389,9 +387,20 @@ namespace mitk
     void WorldToDisplay(const Point3D &worldIndex, Point2D &displayPoint) const;
 
     //##Documentation
+    //## @brief This method converts a 3D world index to the point on the viewport
+    //## using the geometry of the renderWindow.
+    void WorldToView(const Point3D &worldIndex, Point2D &viewPoint) const;
+
+    //##Documentation
     //## @brief This method converts a 2D plane coordinate to the display point
     //## using the geometry of the renderWindow.
     void PlaneToDisplay(const Point2D &planePointInMM, Point2D &displayPoint) const;
+
+    //##Documentation
+    //## @brief This method converts a 2D plane coordinate to the point on the viewport
+    //## using the geometry of the renderWindow.
+    void PlaneToView(const Point2D &planePointInMM, Point2D &viewPoint) const;
+
 
     double GetScaleFactorMMPerDisplayUnit() const;
 
@@ -410,7 +419,7 @@ namespace mitk
     DEPRECATED(virtual Point3D Map2DRendererPositionTo3DWorldPosition(const Point2D &mousePosition) const);
 
   protected:
-    virtual ~BaseRenderer();
+    ~BaseRenderer() override;
 
     //##Documentation
     //## @brief Call update of all mappers. To be implemented in subclasses.
@@ -444,14 +453,14 @@ namespace mitk
 
     //##Documentation
     //## @brief Sets m_CurrentWorldPlaneGeometry
-    virtual void SetCurrentWorldPlaneGeometry(PlaneGeometry *geometry2d);
+    virtual void SetCurrentWorldPlaneGeometry(const PlaneGeometry *geometry2d);
     /**
     * \deprecatedSince{2014_10} Please use SetCurrentWorldPlaneGeometry
     */
     DEPRECATED(void SetCurrentWorldGeometry2D(PlaneGeometry *geometry2d)) { SetCurrentWorldPlaneGeometry(geometry2d); };
     //##Documentation
     //## @brief Sets m_CurrentWorldGeometry
-    virtual void SetCurrentWorldGeometry(BaseGeometry *geometry);
+    virtual void SetCurrentWorldGeometry(const BaseGeometry *geometry);
 
   private:
     //##Documentation
@@ -461,11 +470,11 @@ namespace mitk
     //## which 2D geometry stored in m_WorldTimeGeometry (if available)
     //## is used as m_CurrentWorldPlaneGeometry.
     //## \sa m_CurrentWorldPlaneGeometry
-    TimeGeometry::Pointer m_WorldTimeGeometry;
+    TimeGeometry::ConstPointer m_WorldTimeGeometry;
 
     //##Documentation
     //## Pointer to the current 3D-worldgeometry.
-    BaseGeometry::Pointer m_CurrentWorldGeometry;
+    BaseGeometry::ConstPointer m_CurrentWorldGeometry;
 
     //##Documentation
     //## Pointer to the current 2D-worldgeometry. The 2D-worldgeometry
@@ -504,7 +513,7 @@ namespace mitk
     bool m_KeepDisplayedRegion;
 
   protected:
-    virtual void PrintSelf(std::ostream &os, itk::Indent indent) const override;
+    void PrintSelf(std::ostream &os, itk::Indent indent) const override;
 
     //##Documentation
     //## Data object containing the m_CurrentWorldPlaneGeometry defined above.

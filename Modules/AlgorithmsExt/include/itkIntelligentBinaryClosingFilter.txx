@@ -22,7 +22,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace itk
 {
   template <class TInputImage, class TOutputImage>
-  IntelligentBinaryClosingFilter<TInputImage, TOutputImage>::IntelligentBinaryClosingFilter()
+  IntelligentBinaryClosingFilter<TInputImage, TOutputImage>::IntelligentBinaryClosingFilter(): m_ClosingRadius(4.0), m_SurfaceRatio(70)
   {
     m_ErodeImageFilter = BinaryErodeImageFilterType::New();
     m_DilateImageFilter = BinaryDilateImageFilterType::New();
@@ -31,8 +31,6 @@ namespace itk
     m_RelabelComponentImageFilter = RelabelComponentImageFilterType::New();
     m_RelabelComponentImageFilter->SetInPlace(true);
     m_BorderDetectionDilateFilter = DilateComponentImageFilterType::New();
-    m_ClosingRadius = 4.0;
-    m_SurfaceRatio = 70;
   }
 
   template <class TInputImage, class TOutputImage>
@@ -48,7 +46,7 @@ namespace itk
 
     // set up structuring element for closing
     StructuringElementType seClosing;
-    unsigned long radius[ImageDimension];
+    itk::SizeValueType radius[ImageDimension];
     const typename InputImageType::SpacingType spacing = input->GetSpacing();
     for (unsigned int d = 0; d < ImageDimension; d++)
     { // closing works in voxel coordinates, so use spacing (and add 0.5 for correct rounding - cast just truncates)

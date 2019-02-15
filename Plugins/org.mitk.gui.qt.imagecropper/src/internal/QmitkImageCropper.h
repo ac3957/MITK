@@ -25,8 +25,8 @@ PURPOSE.  See the above copyright notices for more information.
 #endif
 
 #include <QProgressDialog>
-#include "QVTKWidget.h"
 #include "QmitkRegisterClasses.h"
+#include <QList>
 
 #include "itkCommand.h"
 #include <itkImage.h>
@@ -47,8 +47,6 @@ PURPOSE.  See the above copyright notices for more information.
 #include "ui_ImageCropperControls.h"
 
 #include "usServiceRegistration.h"
-
-
 
 /*!
 @brief QmitkImageCropperView
@@ -130,6 +128,7 @@ protected:
   void CreateBoundingShapeInteractor(bool rotationEnabled);
 
 private:
+
   /*!
   * The parent QWidget
   */
@@ -155,6 +154,13 @@ private:
 
   void ProcessImage(bool crop);
 
+  /*!
+  * @brief Resets GUI to default
+  */
+  void setDefaultGUI();
+
+  QString AdaptBoundingObjectName(const QString& name) const;
+
   // cropping parameter
   mitk::ScalarType m_CropOutsideValue;
   bool m_Advanced;
@@ -163,6 +169,5 @@ private:
 
   Ui::ImageCropperControls m_Controls;
 };
-
 
 #endif // QmitkImageCropper_h

@@ -36,6 +36,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "vtkPoints.h"
 #include <vtkCellArray.h>
 #include <vtkPolyLine.h>
+#include <mitkWorkbenchUtil.h>
 
 
 const std::string QmitkTractbasedSpatialStatisticsView::VIEW_ID = "org.mitk.views.tractbasedspatialstatistics";
@@ -78,15 +79,15 @@ void QmitkTractbasedSpatialStatisticsView::OnSelectionChanged(berry::IWorkbenchP
   bool foundStartRoi = false;
   bool foundEndRoi = false;
 
-  mitk::TbssRoiImage* roiImage;
-  mitk::TbssImage* image;
-  mitk::Image* img;
-  mitk::FiberBundle* fib;
-  mitk::DataNode* start;
-  mitk::DataNode* end;
+  mitk::TbssRoiImage* roiImage = nullptr;
+  mitk::TbssImage* image = nullptr;
+  mitk::Image* img = nullptr;
+  mitk::FiberBundle* fib = nullptr;
+  mitk::DataNode* start = nullptr;
+  mitk::DataNode* end = nullptr;
 
-  m_CurrentStartRoi = NULL;
-  m_CurrentEndRoi = NULL;
+  m_CurrentStartRoi = nullptr;
+  m_CurrentEndRoi = nullptr;
 
 
 
@@ -208,7 +209,7 @@ void QmitkTractbasedSpatialStatisticsView::InitPointsets()
     m_P1->SetColor( 1.0, 0.0, 0.0 );
     this->GetDataStorage()->Add(m_P1);
     m_Controls->m_PointWidget->SetPointSetNode(m_P1);
-    auto renderWindowPart = this->GetRenderWindowPart(OPEN);
+    auto renderWindowPart = this->GetRenderWindowPart(mitk::WorkbenchUtil::IRenderWindowPartStrategy::OPEN);
     auto axialSnc = renderWindowPart->GetQmitkRenderWindow("axial")->GetSliceNavigationController();
     auto sagittalSnc = renderWindowPart->GetQmitkRenderWindow("sagittal")->GetSliceNavigationController();
     auto coronalSnc = renderWindowPart->GetQmitkRenderWindow("coronal")->GetSliceNavigationController();
@@ -505,7 +506,7 @@ void QmitkTractbasedSpatialStatisticsView::Clicked(const QPointF& pos)
 {
   int index = (int)pos.x();
 
-  if(m_Roi.size() > 0 && m_CurrentGeometry != NULL && !m_Controls->m_RoiPlotWidget->IsPlottingFiber() )
+  if(m_Roi.size() > 0 && m_CurrentGeometry != nullptr && !m_Controls->m_RoiPlotWidget->IsPlottingFiber() )
   {
 
     index = std::min( (int)m_Roi.size()-1, std::max(0, index) );
@@ -554,8 +555,8 @@ void QmitkTractbasedSpatialStatisticsView::Cut()
   mitk::Point3D startCenter = dynamic_cast<mitk::PlanarFigure*>(m_CurrentStartRoi->GetData())->GetWorldControlPoint(0); //center Point of start roi
   mitk::Point3D endCenter = dynamic_cast<mitk::PlanarFigure*>(m_CurrentEndRoi->GetData())->GetWorldControlPoint(0); //center Point of end roi
 
-  mitk::FiberBundle::Pointer inStart = fib->ExtractFiberSubset(m_CurrentStartRoi, NULL);
-  mitk::FiberBundle::Pointer inBoth = inStart->ExtractFiberSubset(m_CurrentEndRoi, NULL);
+  mitk::FiberBundle::Pointer inStart = fib->ExtractFiberSubset(m_CurrentStartRoi, nullptr);
+  mitk::FiberBundle::Pointer inBoth = inStart->ExtractFiberSubset(m_CurrentEndRoi, nullptr);
 
   int num = inBoth->GetNumFibers();
 
@@ -576,7 +577,7 @@ void QmitkTractbasedSpatialStatisticsView::Cut()
   for( int fiberID( 0 ); fiberID < num; fiberID++ )
   {
     vtkIdType   numPointsInCell(0);
-    vtkIdType*  pointsInCell(NULL);
+    vtkIdType*  pointsInCell(nullptr);
     lines->GetNextCell ( numPointsInCell, pointsInCell );
 
     int startId = 0;

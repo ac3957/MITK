@@ -27,6 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 //itksys
 #include <itksys/SystemTools.hxx>
+#include <itkFileTools.h>
 
 // microservice includes
 #include "usGetModuleContext.h"
@@ -53,6 +54,7 @@ class mitkCustomTagParserTestSuite : public mitk::TestFixture
   MITK_TEST(ValidPropertyAlternatingOffset_Success);
   MITK_TEST(ValidPropertySimpleOffset_Success);
   MITK_TEST(ValidPropertyListOffset_Success);
+  MITK_TEST(ExtractRevision);
   CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -110,7 +112,7 @@ public:
     std::string jsonRevision = "";
     bool hasRevision = parsedPropertyList->GetStringProperty("CEST.Revision", revision);
     parsedPropertyList->GetStringProperty("CEST.Offset", offset);
-    parsedPropertyList->GetStringProperty("CEST.Offsets", offsets);
+    parsedPropertyList->GetStringProperty(mitk::CEST_PROPERTY_NAME_OFFSETS().c_str(), offsets);
     parsedPropertyList->GetStringProperty("CEST.measurements", measurements);
     parsedPropertyList->GetStringProperty("CEST.SamplingType", sampling);
     parsedPropertyList->GetStringProperty("CEST.revision_json", jsonRevision);
@@ -190,10 +192,17 @@ public:
     // we assume the test library will be in the same location as the MitkCEST library on windows
     // on linux the test driver should have a relative path of ../bin/
 #ifdef _WIN32
-    std::string filename = m_PathToModule + "/" + "118.json";
+    std::string dirname = m_PathToModule + "/CESTRevisionMapping";  
 #else
-    std::string filename = m_PathToModule + "/../lib/" + "118.json";
+    std::string dirname = m_PathToModule + "/../lib/CESTRevisionMapping";
 #endif
+
+    //bool dirWasThere = itksys::SystemTools::FileIsDirectory(dirname);
+
+    std::string filename = dirname + "/118.json";
+
+    itk::FileTools::CreateDirectory(dirname);
+
     std::ofstream externalFile(filename.c_str());
 
     if (externalFile.is_open())
@@ -234,7 +243,7 @@ public:
     std::string jsonRevision = "";
     bool hasRevision = parsedPropertyList->GetStringProperty("CEST.Revision", revision);
     parsedPropertyList->GetStringProperty("CEST.Offset", offset);
-    parsedPropertyList->GetStringProperty("CEST.Offsets", offsets);
+    parsedPropertyList->GetStringProperty(mitk::CEST_PROPERTY_NAME_OFFSETS().c_str(), offsets);
     parsedPropertyList->GetStringProperty("CEST.measurements", measurements);
     parsedPropertyList->GetStringProperty("CEST.SamplingType", sampling);
     parsedPropertyList->GetStringProperty("CEST.revision_json", jsonRevision);
@@ -288,7 +297,7 @@ public:
     mitk::CustomTagParser tagParser(m_PathToModule);
     auto parsedPropertyList = tagParser.ParseDicomPropertyString(m_ValidCESTCustomTagAlternatingOffset);
     std::string offsets = "";
-    parsedPropertyList->GetStringProperty("CEST.Offsets", offsets);
+    parsedPropertyList->GetStringProperty(mitk::CEST_PROPERTY_NAME_OFFSETS().c_str(), offsets);
 
     bool offsetsMatch = (offsets == "-300 2 -2 1.86667 -1.86667 1.73333 -1.73333 1.6 -1.6 1.46667 -1.46667 1.33333 -1.33333 1.2 -1.2 1.06667 -1.06667 0.933333 -0.933333 0.8 -0.8 0.666667 -0.666667 0.533333 -0.533333 0.4 -0.4 0.266667 -0.266667 0.133333 -0.133333 0");
 
@@ -299,7 +308,7 @@ public:
     mitk::CustomTagParser tagParser(m_PathToModule);
     auto parsedPropertyList = tagParser.ParseDicomPropertyString(m_ValidCESTCustomTagSingleOffset);
     std::string offsets = "";
-    parsedPropertyList->GetStringProperty("CEST.Offsets", offsets);
+    parsedPropertyList->GetStringProperty(mitk::CEST_PROPERTY_NAME_OFFSETS().c_str(), offsets);
 
     bool offsetsMatch = (offsets == "-300 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2");
 
@@ -321,7 +330,7 @@ public:
     mitk::CustomTagParser tagParser(m_PathToModule);
     auto parsedPropertyList = tagParser.ParseDicomPropertyString(m_ValidCESTCustomTagListOffset);
     std::string offsets = "";
-    parsedPropertyList->GetStringProperty("CEST.Offsets", offsets);
+    parsedPropertyList->GetStringProperty(mitk::CEST_PROPERTY_NAME_OFFSETS().c_str(), offsets);
     std::string referenceString = "-300 -100 -50 -35 -25 -17 -12 -9.5 -8.25 -7 -6.1 -5.4 -4.7 -4 -3.3 -2.7 -2 -1.7 -1.5 -1.1 -0.9 -300 -0.6 -0.4 -0.2 0 0.2 0.4 0.6 0.95 1.1 1.25 1.4 1.55 1.7 1.85 2 2.15 2.3 2.45 2.6 2.75 2.9 3.05 -300 3.2 3.35 3.5 3.65 3.8 3.95 4.1 4.25 4.4 4.7 5.2 6 7 9 12 17 25 35 50 100 -300";
     bool offsetsMatch = (offsets == referenceString);
 
@@ -333,6 +342,36 @@ public:
     {
       MITK_ERROR << "Could not delete test offset list file";
     }
+  }
+
+  void ExtractRevision()
+  {
+    std::string empty = "";
+    std::string invalidRule1a = "CESaaaaaaa";
+    std::string invalidRule1b = "aaaCESTaaa";
+    std::string invalidRule2a = "CESTaaaa";
+    std::string invalidRule2b = "aaa_CESTaaa";
+    std::string invalidRule3a = "CESTaaa_REVaaaa";
+    std::string valid1 = "CEST_REV12345";
+    std::string valid2 = "aaa_CESTaaaa_REV2";
+    std::string valid3 = "CESTaaaa_REV3_c";
+    std::string valid4 = "cest_rev4";
+    std::string valid5 = "aaa_cestaaaa_rev5";
+    std::string valid6 = "cestaaaa_rev6_c";
+
+    CPPUNIT_ASSERT_THROW_MESSAGE("Verify exception on empty", mitk::CustomTagParser::ExtractRevision(empty), mitk::Exception);
+    CPPUNIT_ASSERT_THROW_MESSAGE("Verify exception on invalidRule1a", mitk::CustomTagParser::ExtractRevision(invalidRule1a), mitk::Exception);
+    CPPUNIT_ASSERT_THROW_MESSAGE("Verify exception on invalidRule1b", mitk::CustomTagParser::ExtractRevision(invalidRule1b), mitk::Exception);
+    CPPUNIT_ASSERT_THROW_MESSAGE("Verify exception on invalidRule2a", mitk::CustomTagParser::ExtractRevision(invalidRule2a), mitk::Exception);
+    CPPUNIT_ASSERT_THROW_MESSAGE("Verify exception on invalidRule2b", mitk::CustomTagParser::ExtractRevision(invalidRule2b), mitk::Exception);
+    CPPUNIT_ASSERT_MESSAGE("Verify empty revision on invalidRule3a", mitk::CustomTagParser::ExtractRevision(invalidRule3a) == "");
+    CPPUNIT_ASSERT_MESSAGE("Extract revision from valid1.", mitk::CustomTagParser::ExtractRevision(valid1) == "12345");
+    CPPUNIT_ASSERT_MESSAGE("Extract revision from valid2.", mitk::CustomTagParser::ExtractRevision(valid2) == "2");
+    CPPUNIT_ASSERT_MESSAGE("Extract revision from valid3.", mitk::CustomTagParser::ExtractRevision(valid3) == "3");
+    CPPUNIT_ASSERT_MESSAGE("Extract revision from valid4.", mitk::CustomTagParser::ExtractRevision(valid4) == "4");
+    CPPUNIT_ASSERT_MESSAGE("Extract revision from valid5.", mitk::CustomTagParser::ExtractRevision(valid5) == "5");
+    CPPUNIT_ASSERT_MESSAGE("Extract revision from valid6.", mitk::CustomTagParser::ExtractRevision(valid6) == "6");
+
   }
 };
 

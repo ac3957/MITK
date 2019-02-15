@@ -122,6 +122,126 @@ mitk::CustomTagParser::CustomTagParser(std::string relevantFile) : m_ClosestInte
   std::string fileName;
   itksys::SystemTools::SplitProgramPath(relevantFile, pathToDirectory, fileName);
   m_DicomDataPath = pathToDirectory;
+  m_ParseStrategy = "Automatic";
+  m_RevisionMappingStrategy = "Fuzzy";
+}
+
+std::string mitk::CustomTagParser::ExtractRevision(std::string sequenceFileName)
+{
+  //all rules are case insesitive. Thus we convert everything to lower case
+  //in order to check everything only once.
+  std::string cestPrefix = "cest";
+  std::string cestPrefix2 = "_cest";
+  std::string cestPrefix3 = "\\cest"; //this version covers the fact that the strings extracted
+                                      //from the SIEMENS tag has an additional prefix that is seperated by backslash.
+  std::string revisionPrefix = "_rev";
+  std::transform(sequenceFileName.begin(), sequenceFileName.end(), sequenceFileName.begin(), ::tolower);
+
+  bool isCEST = sequenceFileName.compare(0, cestPrefix.length(), cestPrefix) == 0;
+  std::size_t foundPosition = 0;
+
+  if (!isCEST)
+  {
+    foundPosition = sequenceFileName.find(cestPrefix2);
+    isCEST = foundPosition != std::string::npos;
+  }
+
+  if (!isCEST)
+  {
+    foundPosition = sequenceFileName.find(cestPrefix3);
+    isCEST = foundPosition != std::string::npos;
+  }
+
+  if (!isCEST)
+  {
+    mitkThrow() << "Invalid CEST sequence file name. No CEST prefix found. Could not extract revision.";
+  }
+
+  foundPosition = sequenceFileName.find(revisionPrefix, foundPosition);
+  if (foundPosition == std::string::npos)
+  {
+    mitkThrow() << "Invalid CEST sequence file name. No revision prefix was found in CEST sequence file name. Could not extract revision.";
+  }
+
+  std::string revisionString = sequenceFileName.substr(foundPosition + revisionPrefix.length(), std::string::npos);
+  std::size_t firstNoneNumber = revisionString.find_first_not_of("0123456789");
+  if (firstNoneNumber != std::string::npos)
+  {
+    revisionString.erase(firstNoneNumber, std::string::npos);
+  }
+
+  return revisionString;
+}
+
+bool mitk::CustomTagParser::IsT1Sequence(std::string preparationType,
+  std::string recoveryMode,
+  std::string spoilingType,
+  std::string revisionString)
+{
+  bool isT1 = false;
+
+  // if a forced parse strategy is set, use that one
+  if ("T1" == m_ParseStrategy)
+  {
+    return true;
+  }
+  if ("CEST/WASABI" == m_ParseStrategy)
+  {
+    return false;
+  }
+
+  if (("T1Recovery" == preparationType) || ("T1Inversion" == preparationType))
+  {
+    isT1 = true;
+  }
+
+  // How to interpret the recoveryMode depends on the age of the sequence
+  // older sequences use 0 = false and 1 = true, newer ones 1 = false and 2 = true.
+  // A rough rule of thumb is to assume that if the SpoilingType is 0, then the first
+  // convention is chosen, if it is 1, then the second applies. Otherwise
+  // we assume revision 1485 and newer to follow the new convention.
+  // This unfortunate heuristic is due to somewhat arbitrary CEST sequence implementations.
+  if (!isT1)
+  {
+    std::string thisIsTrue = "1";
+    std::string thisIsFalse = "0";
+    if ("0" == spoilingType)
+    {
+      thisIsFalse = "0";
+      thisIsTrue = "1";
+    }
+    else if ("1" == spoilingType)
+    {
+      thisIsFalse = "1";
+      thisIsTrue = "2";
+    }
+    else
+    {
+      int revisionNrWeAssumeToBeDifferenciating = 1485;
+      if (std::stoi(revisionString) - revisionNrWeAssumeToBeDifferenciating < 0)
+      {
+        thisIsFalse = "0";
+        thisIsTrue = "1";
+      }
+      else
+      {
+        thisIsFalse = "1";
+        thisIsTrue = "2";
+      }
+    }
+
+    if (thisIsFalse == recoveryMode)
+    {
+      isT1 = false;
+    }
+    else if (thisIsTrue == recoveryMode)
+    {
+      isT1 = true;
+    }
+
+  }
+
+  return isT1;
 }
 
 mitk::PropertyList::Pointer mitk::CustomTagParser::ParseDicomPropertyString(std::string dicomPropertyString)
@@ -129,7 +249,7 @@ mitk::PropertyList::Pointer mitk::CustomTagParser::ParseDicomPropertyString(std:
   auto results = mitk::PropertyList::New();
   if ("" == dicomPropertyString)
   {
-    MITK_ERROR << "Could not parse empty custom dicom string";
+    //MITK_ERROR << "Could not parse empty custom dicom string";
     return results;
   }
 
@@ -143,7 +263,7 @@ mitk::PropertyList::Pointer mitk::CustomTagParser::ParseDicomPropertyString(std:
   for (int i = 0; i < len; i += 3)
   {
     std::string byte = dicomPropertyString.substr(i, 2);
-    char chr = (char)(int)strtol(byte.c_str(), NULL, 16);
+    auto chr = (char)(int)strtol(byte.c_str(), nullptr, 16);
     asciiString.push_back(chr);
   }
 
@@ -168,20 +288,17 @@ mitk::PropertyList::Pointer mitk::CustomTagParser::ParseDicomPropertyString(std:
     }
   }
 
-  // determine what revision we are using to handle parameters appropriately
-  std::string revisionPrefix = "CEST_Rev";
+  std::string revisionString = "";
 
-  std::size_t foundPosition = privateParameters["tSequenceFileName"].find(revisionPrefix);
-  if (foundPosition == std::string::npos)
+  try
   {
-    MITK_ERROR << "Could not find revision information.";
+    revisionString = ExtractRevision(privateParameters["tSequenceFileName"]);
+  }
+  catch (const std::exception &e)
+  {
+    MITK_ERROR << "Cannot deduce revision information. Reason: "<< e.what();
     return results;
   }
-
-  std::string revisionString =
-    privateParameters["tSequenceFileName"].substr(foundPosition + revisionPrefix.length(), std::string::npos);
-  std::size_t firstNonNumber = revisionString.find_first_not_of("0123456789");
-  revisionString.erase(firstNonNumber, std::string::npos);
 
   results->SetProperty(m_RevisionPropertyName, mitk::StringProperty::New(revisionString));
 
@@ -193,7 +310,7 @@ mitk::PropertyList::Pointer mitk::CustomTagParser::ParseDicomPropertyString(std:
   {
     boost::property_tree::read_json(jsonStream, root);
   }
-  catch (boost::property_tree::json_parser_error e)
+  catch (const boost::property_tree::json_parser_error &e)
   {
     mitkThrow() << "Could not parse json file. Error was:\n" << e.what();
   }
@@ -218,23 +335,82 @@ mitk::PropertyList::Pointer mitk::CustomTagParser::ParseDicomPropertyString(std:
     }
   }
 
-  std::string sampling = "";
   std::string offset = "";
   std::string measurements = "";
-  bool hasSamplingInformation = results->GetStringProperty("CEST.SamplingType", sampling);
   results->GetStringProperty("CEST.Offset", offset);
   results->GetStringProperty("CEST.measurements", measurements);
 
-  if (hasSamplingInformation)
+  if ("" == measurements)
   {
-    std::string offsets = GetOffsetString(sampling, offset, measurements);
-    results->SetStringProperty(m_OffsetsPropertyName.c_str(), offsets.c_str());
+    std::string stringRepetitions = "";
+    std::string stringAverages = "";
+    results->GetStringProperty("CEST.repetitions", stringRepetitions);
+    results->GetStringProperty("CEST.averages", stringAverages);
+    std::stringstream  measurementStream;
+    try
+    {
+      measurementStream << std::stoi(stringRepetitions) + std::stoi(stringAverages);
+      measurements = measurementStream.str();
+      MITK_INFO << "Could not find measurements, assuming repetitions + averages. Which is: " << measurements;
+    }
+    catch (const std::invalid_argument &ia)
+    {
+      MITK_ERROR
+        << "Could not find measurements, fallback assumption of repetitions + averages could not be determined either: "
+        << ia.what();
+    }
+  }
+
+  std::string preparationType = "";
+  std::string recoveryMode = "";
+  std::string spoilingType = "";
+  results->GetStringProperty(CEST_PROPERTY_NAME_PREPERATIONTYPE().c_str(), preparationType);
+  results->GetStringProperty(CEST_PROPERTY_NAME_RECOVERYMODE().c_str(), recoveryMode);
+  results->GetStringProperty(CEST_PROPERTY_NAME_SPOILINGTYPE().c_str(), spoilingType);
+
+  if (this->IsT1Sequence(preparationType, recoveryMode, spoilingType, revisionString))
+  {
+    MITK_INFO << "Parsed as T1 image";
+
+    mitk::LocaleSwitch localeSwitch("C");
+
+    std::stringstream trecStream;
+
+    std::string trecPath = m_DicomDataPath + "/TREC.txt";
+    std::ifstream list(trecPath.c_str());
+
+    if (list.good())
+    {
+      std::string currentTime;
+      while (std::getline(list, currentTime))
+      {
+        trecStream << currentTime << " ";
+      }
+    }
+    else
+    {
+      MITK_WARN << "Assumed T1, but could not load TREC at " << trecPath;
+    }
+
+    results->SetStringProperty(CEST_PROPERTY_NAME_TREC().c_str(), trecStream.str().c_str());
   }
   else
   {
-    MITK_WARN << "Could not determine sampling type.";
+    MITK_INFO << "Parsed as CEST or WASABI image";
+    std::string sampling = "";
+    bool hasSamplingInformation = results->GetStringProperty("CEST.SamplingType", sampling);
+    if (hasSamplingInformation)
+    {
+      std::string offsets = GetOffsetString(sampling, offset, measurements);
+      results->SetStringProperty(m_OffsetsPropertyName.c_str(), offsets.c_str());
+    }
+    else
+    {
+      MITK_WARN << "Could not determine sampling type.";
+    }
   }
-  
+
+
   //persist all properties
   mitk::IPropertyPersistence *persSrv = GetPersistenceService();
   if (persSrv)
@@ -288,15 +464,12 @@ std::vector<int> mitk::CustomTagParser::GetInternalRevisions()
 
 std::vector<int> mitk::CustomTagParser::GetExternalRevisions()
 {
-  std::string moduleLocation = us::GetModuleContext()->GetModule()->GetLocation();
-  std::string stringToModule;
-  std::string libraryName;
-  itksys::SystemTools::SplitProgramPath(moduleLocation, stringToModule, libraryName);
+  std::string stringToJSONDirectory = GetExternalJSONDirectory();
 
-  std::string prospectiveJsonsPath = stringToModule + "/*.json";
+  std::string prospectiveJsonsPath = stringToJSONDirectory + "/*.json";
 
   std::set<std::string> JsonFiles;
-  Poco::Glob::glob(prospectiveJsonsPath, JsonFiles);
+  Poco::Glob::glob(prospectiveJsonsPath, JsonFiles, Poco::Glob::GLOB_CASELESS);
 
   std::vector<int> availableRevisionsVector;
 
@@ -358,6 +531,33 @@ void mitk::CustomTagParser::GetClosestLowerRevision(std::string revisionString)
 {
   m_ClosestInternalRevision = GetClosestLowerRevision(revisionString, GetInternalRevisions());
   m_ClosestExternalRevision = GetClosestLowerRevision(revisionString, GetExternalRevisions());
+
+  if ("Strict" == m_RevisionMappingStrategy && !((0 == m_ClosestInternalRevision.compare(revisionString)) ||
+                                                 (0 == m_ClosestExternalRevision.compare(revisionString))))
+  { // strict revision mapping and neither revision does match the dicom meta data
+    std::stringstream errorMessageStream;
+    errorMessageStream << "\nCould not parse dicom data in strict mode, data revision " << revisionString
+      << " has no known matching parameter mapping. To use the closest known older parameter mapping select the "
+      << "\"Fuzzy\" revision mapping option when loading the data.\n"
+      << "\nCurrently known revision mappings are:\n  Precompiled:";
+    for (const auto revision : GetInternalRevisions())
+    {
+      errorMessageStream << " " << revision;
+    }
+    errorMessageStream << "\n  External:";
+    for (const auto revision : GetExternalRevisions())
+    {
+      errorMessageStream << " " << revision;
+    }
+    errorMessageStream << "\n\nExternal revision mapping descriptions should be located at\n\n";
+    std::string stringToJSONDirectory = GetExternalJSONDirectory();
+    errorMessageStream << stringToJSONDirectory;
+
+    errorMessageStream << "\n\nTo provide an external mapping for this revision create a " << revisionString
+                       << ".json there. You might need to create the directory first.";
+
+    mitkThrow() << errorMessageStream.str();
+  }
 }
 
 std::string mitk::CustomTagParser::GetRevisionAppropriateJSONString(std::string revisionString)
@@ -394,12 +594,9 @@ std::string mitk::CustomTagParser::GetRevisionAppropriateJSONString(std::string 
 
     if (useExternal)
     {
-      std::string moduleLocation = us::GetModuleContext()->GetModule()->GetLocation();
-      std::string stringToModule;
-      std::string libraryName;
-      itksys::SystemTools::SplitProgramPath(moduleLocation, stringToModule, libraryName);
+      std::string stringToJSONDirectory = GetExternalJSONDirectory();
 
-      std::string prospectiveJsonPath = stringToModule + "/" + m_ClosestExternalRevision + ".json";
+      std::string prospectiveJsonPath = stringToJSONDirectory + "/" + m_ClosestExternalRevision + ".json";
 
       std::ifstream externalJSON(prospectiveJsonPath.c_str());
 
@@ -531,7 +728,6 @@ std::string mitk::CustomTagParser::GetOffsetString(std::string samplingType, std
       std::string currentOffset;
       while (std::getline(list, currentOffset))
       {
-        currentOffset.erase(std::remove(currentOffset.begin(), currentOffset.end(), ' '), currentOffset.end());
         results << currentOffset << " ";
       }
     }
@@ -557,10 +753,75 @@ std::string mitk::CustomTagParser::GetOffsetString(std::string samplingType, std
   }
 
   std::string resultString = results.str();
+  // replace multiple spaces by a single space
+  std::string::iterator newEnditerator =
+    std::unique(resultString.begin(), resultString.end(),
+      [=](char lhs, char rhs) { return (lhs == rhs) && (lhs == ' '); }
+  );
+  resultString.erase(newEnditerator, resultString.end());
+
   if ((resultString.length() > 0) && (resultString.at(resultString.length() - 1) == ' '))
   {
     resultString.erase(resultString.end() - 1, resultString.end());
   }
 
+  if ((resultString.length() > 0) && (resultString.at(0) == ' '))
+  {
+    resultString.erase(resultString.begin(), ++(resultString.begin()));
+  }
+
   return resultString;
+}
+
+void mitk::CustomTagParser::SetParseStrategy(std::string parseStrategy)
+{
+  m_ParseStrategy = parseStrategy;
+}
+
+void mitk::CustomTagParser::SetRevisionMappingStrategy(std::string revisionMappingStrategy)
+{
+  m_RevisionMappingStrategy = revisionMappingStrategy;
+}
+
+std::string mitk::CustomTagParser::GetExternalJSONDirectory()
+{
+  std::string moduleLocation = us::GetModuleContext()->GetModule()->GetLocation();
+  std::string stringToModule;
+  std::string libraryName;
+  itksys::SystemTools::SplitProgramPath(moduleLocation, stringToModule, libraryName);
+
+  std::stringstream jsonDirectory;
+  jsonDirectory << stringToModule << "/CESTRevisionMapping";
+
+  return jsonDirectory.str();
+}
+
+const std::string mitk::CEST_PROPERTY_NAME_TOTALSCANTIME()
+{
+  return "CEST.TotalScanTime";
+};
+
+const std::string mitk::CEST_PROPERTY_NAME_PREPERATIONTYPE()
+{
+  return "CEST.PreparationType";
+};
+
+const std::string mitk::CEST_PROPERTY_NAME_RECOVERYMODE()
+{
+  return "CEST.RecoveryMode";
+};
+
+const std::string mitk::CEST_PROPERTY_NAME_SPOILINGTYPE()
+{
+  return "CEST.SpoilingType";
+};
+
+const std::string mitk::CEST_PROPERTY_NAME_OFFSETS()
+{
+  return "CEST.Offsets";
+};
+
+const std::string mitk::CEST_PROPERTY_NAME_TREC()
+{
+  return std::string("CEST.TREC");
 }

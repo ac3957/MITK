@@ -65,9 +65,6 @@ mitk::USCombinedModality::USCombinedModality(USDevice::Pointer usDevice, Navigat
 
 mitk::USCombinedModality::~USCombinedModality()
 {
-  if (m_ServiceRegistration != nullptr)
-    m_ServiceRegistration.Unregister();
-  m_ServiceRegistration = 0;
 }
 
 std::string mitk::USCombinedModality::GetDeviceClass()
@@ -135,9 +132,7 @@ void mitk::USCombinedModality::UnregisterOnService()
   if (m_DeviceState == State_Activated) { this->Deactivate(); }
   if (m_DeviceState == State_Connected) { this->Disconnect(); }
 
-  if (m_ServiceRegistration != nullptr)
-    m_ServiceRegistration.Unregister();
-  m_ServiceRegistration = 0;
+  mitk::USDevice::UnregisterOnService();
 }
 
 mitk::AffineTransform3D::Pointer mitk::USCombinedModality::GetCalibration()
@@ -162,7 +157,7 @@ mitk::AffineTransform3D::Pointer mitk::USCombinedModality::GetCalibration(std::s
   std::map<std::string, mitk::AffineTransform3D::Pointer>::iterator calibrationIterator
     = m_Calibrations.find(calibrationKey);
 
-  if (calibrationIterator == m_Calibrations.end()) { return 0; }
+  if (calibrationIterator == m_Calibrations.end()) { return nullptr; }
 
   return calibrationIterator->second;
 }
@@ -369,7 +364,7 @@ void mitk::USCombinedModality::GenerateData()
   if (m_UltrasoundDevice->GetIsFreezed()) { return; } //if the image is freezed: do nothing
 
   //get next image from ultrasound image source
-  mitk::Image::Pointer image = m_UltrasoundDevice->GetUSImageSource()->GetNextImage();
+  mitk::Image::Pointer image = m_UltrasoundDevice->GetUSImageSource()->GetNextImage()[0];
 
   if (image.IsNull() || !image->IsInitialized()) //check the image
   {
@@ -454,14 +449,14 @@ void mitk::USCombinedModality::DeserializeCalibration(const std::string& xmlStri
     return;
   }
   TiXmlElement* root = doc.FirstChildElement();
-  if (root == NULL)
+  if (root == nullptr)
   {
     MITK_ERROR << "Unable to deserialize calibrations in CombinedModality. String contained no root element.";
     mitkThrow() << "Unable to deserialize calibrations in CombinedModality. String contained no root element.";
     return;
   }
   // Read Calibrations
-  for (TiXmlElement* elem = root->FirstChildElement(); elem != NULL; elem = elem->NextSiblingElement())
+  for (TiXmlElement* elem = root->FirstChildElement(); elem != nullptr; elem = elem->NextSiblingElement())
   {
     mitk::AffineTransform3D::MatrixType matrix;
     mitk::AffineTransform3D::OffsetType translation;

@@ -1,47 +1,68 @@
 file(GLOB_RECURSE H_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/include/*")
 
 set(CPP_FILES
-QmitkApplicationCursor.cpp
-QmitkDataStorageComboBox.cpp
-QmitkDataStorageListModel.cpp
-QmitkDataStorageTableModel.cpp
-QmitkDataStorageTreeModel.cpp
-QmitkFileReaderOptionsDialog.cpp
-QmitkFileReaderWriterOptionsWidget.cpp
-QmitkFileWriterOptionsDialog.cpp
-QmitkIOUtil.cpp
-QmitkLevelWindowPresetDefinitionDialog.cpp
-QmitkLevelWindowRangeChangeDialog.cpp
-QmitkLevelWindowWidgetContextMenu.cpp
-QmitkLevelWindowWidget.cpp
-QmitkLineEditLevelWindowWidget.cpp
-QmitkMemoryUsageIndicatorView.cpp
-QmitkMimeTypes.cpp
-QmitkNodeDescriptor.cpp
-QmitkNodeDescriptorManager.cpp
-QmitkRenderWindowMenu.cpp
-QmitkProgressBar.cpp
-QmitkPropertiesTableEditor.cpp
-QmitkPropertiesTableModel.cpp
-QmitkPropertyDelegate.cpp
-QmitkRegisterClasses.cpp
-QmitkRenderingManager.cpp
-QmitkRenderingManagerFactory.cpp
-QmitkRenderWindow.cpp
-QmitkServiceListWidget.cpp
-QmitkSliderLevelWindowWidget.cpp
-QmitkStdMultiWidget.cpp
-QmitkMouseModeSwitcher.cpp
-QmitkDataStorageFilterProxyModel.cpp
-QmitkDataStorageComboBoxWithSelectNone.cpp
-QmitkPropertyItem.cpp
-QmitkPropertyItemDelegate.cpp
-QmitkPropertyItemModel.cpp
+  QmitkAbstractDataStorageModel.cpp
+  QmitkApplicationCursor.cpp
+  QmitkDataStorageComboBox.cpp
+  QmitkDataStorageDefaultListModel.cpp
+  QmitkDataStorageListModel.cpp
+  QmitkDataStorageTableModel.cpp
+  QmitkDataStorageSimpleTreeModel.cpp
+  QmitkDataStorageTreeModel.cpp
+  QmitkDataStorageTreeModelInternalItem.cpp
+  QmitkDnDDataNodeWidget.cpp
+  QmitkFileReaderOptionsDialog.cpp
+  QmitkFileReaderWriterOptionsWidget.cpp
+  QmitkFileWriterOptionsDialog.cpp
+  QmitkIOUtil.cpp
+  QmitkLevelWindowPresetDefinitionDialog.cpp
+  QmitkLevelWindowRangeChangeDialog.cpp
+  QmitkLevelWindowWidgetContextMenu.cpp
+  QmitkLevelWindowWidget.cpp
+  QmitkLineEditLevelWindowWidget.cpp
+  QmitkMemoryUsageIndicatorView.cpp
+  QmitkMimeTypes.cpp
+  QmitkNodeDescriptor.cpp
+  QmitkColoredNodeDescriptor.cpp
+  QmitkNodeDescriptorManager.cpp
+  QmitkRenderWindowMenu.cpp
+  QmitkProgressBar.cpp
+  QmitkPropertiesTableEditor.cpp
+  QmitkPropertiesTableModel.cpp
+  QmitkPropertyDelegate.cpp
+  QmitkRegisterClasses.cpp
+  QmitkRenderingManager.cpp
+  QmitkRenderingManagerFactory.cpp
+  QmitkRenderWindow.cpp
+  QmitkServiceListWidget.cpp
+  QmitkSliderLevelWindowWidget.cpp
+  QmitkStdMultiWidget.cpp
+  QmitkMouseModeSwitcher.cpp
+  QmitkDataStorageFilterProxyModel.cpp
+  QmitkDataStorageComboBoxWithSelectNone.cpp
+  QmitkPropertyItem.cpp
+  QmitkPropertyItemDelegate.cpp
+  QmitkPropertyItemModel.cpp
+  QmitkStyleManager.cpp
+  QmitkAbstractDataStorageInspector.cpp
+  QmitkDataStorageListInspector.cpp
+  QmitkDataStorageTreeInspector.cpp
+  QmitkModelViewSelectionConnector.cpp
+  mitkIDataStorageInspectorProvider.cpp
+  mitkQtWidgetsActivator.cpp
+  mitkDataStorageInspectorGenerator.cpp
+  QmitkOverlayWidget.cpp
+  QmitkNodeDetailsDialog.cpp
 )
 
 set(MOC_H_FILES
+  include/QmitkAbstractDataStorageModel.h
   include/QmitkDataStorageComboBox.h
   include/QmitkDataStorageTableModel.h
+  include/QmitkDataStorageTreeModel.h
+  include/QmitkDataStorageSimpleTreeModel.h
+  include/QmitkDataStorageDefaultListModel.h
+  include/QmitkDnDDataNodeWidget.h
   include/QmitkFileReaderOptionsDialog.h
   include/QmitkFileReaderWriterOptionsWidget.h
   include/QmitkFileWriterOptionsDialog.h
@@ -52,6 +73,7 @@ set(MOC_H_FILES
   include/QmitkLineEditLevelWindowWidget.h
   include/QmitkMemoryUsageIndicatorView.h
   include/QmitkNodeDescriptor.h
+  include/QmitkColoredNodeDescriptor.h
   include/QmitkNodeDescriptorManager.h
   include/QmitkRenderWindowMenu.h
   include/QmitkProgressBar.h
@@ -64,9 +86,14 @@ set(MOC_H_FILES
   include/QmitkStdMultiWidget.h
   include/QmitkMouseModeSwitcher.h
   include/QmitkDataStorageComboBoxWithSelectNone.h
-  include/QmitkPropertyItem.h
   include/QmitkPropertyItemDelegate.h
   include/QmitkPropertyItemModel.h
+  include/QmitkDataStorageListInspector.h
+  include/QmitkAbstractDataStorageInspector.h
+  include/QmitkDataStorageTreeInspector.h
+  include/QmitkModelViewSelectionConnector.h
+  include/QmitkOverlayWidget.h
+  include/QmitkNodeDetailsDialog.h
 )
 
 set(UI_FILES
@@ -77,6 +104,8 @@ set(UI_FILES
   src/QmitkLevelWindowRangeChange.ui
   src/QmitkMemoryUsageIndicator.ui
   src/QmitkServiceListWidgetControls.ui
+  src/QmitkDataStorageListInspector.ui
+  src/QmitkDataStorageTreeInspector.ui
 )
 
 set(QRC_FILES

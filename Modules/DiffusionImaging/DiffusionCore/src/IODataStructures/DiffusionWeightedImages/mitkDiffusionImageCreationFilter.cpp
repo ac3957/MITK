@@ -24,9 +24,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkITKImageImport.h"
 
 #include "mitkIOUtil.h"
-
-#include <itkImageFileWriter.h>
-
 #include <itkComposeImageFilter.h>
 
 
@@ -132,10 +129,10 @@ void mitk::DiffusionImageCreationFilter::GenerateData()
 
   // create BValueMap
   mitk::BValueMapProperty::BValueMap BValueMap = mitk::BValueMapProperty::CreateBValueMap( DiffusionVectors, BValue );
-  outputForCache->SetProperty( DPH::GRADIENTCONTAINERPROPERTYNAME.c_str(), mitk::GradientDirectionsProperty::New( DiffusionVectors ) );
-  outputForCache->SetProperty( DPH::MEASUREMENTFRAMEPROPERTYNAME.c_str(), mitk::MeasurementFrameProperty::New( MeasurementFrame ) );
-  outputForCache->SetProperty( DPH::BVALUEMAPPROPERTYNAME.c_str(), mitk::BValueMapProperty::New( BValueMap ) );
-  outputForCache->SetProperty( DPH::REFERENCEBVALUEPROPERTYNAME.c_str(), mitk::FloatProperty::New( BValue ) );
+  DPH::SetGradientContainer(outputForCache, DiffusionVectors);
+  DPH::SetMeasurementFrame(outputForCache, MeasurementFrame);
+  DPH::SetBValueMap(outputForCache, BValueMap);
+  DPH::SetReferenceBValue(outputForCache, BValue);
 
   outputForCache->Modified();
 }

@@ -42,17 +42,17 @@ public:
   ///
   /// \see IPreferencePage::PerformOk()
   ///
-  virtual bool PerformOk() override;
+  bool PerformOk() override;
 
   ///
   /// \see IPreferencePage::PerformCancel()
   ///
-  virtual void PerformCancel() override;
+  void PerformCancel() override;
 
   ///
   /// \see IPreferencePage::Update()
   ///
-  virtual void Update() override;
+  void Update() override;
 
 protected:
   QWidget* m_MainControl;
@@ -60,8 +60,6 @@ protected:
   QCheckBox* m_PlaceNewNodesOnTop;
   QCheckBox* m_ShowHelperObjects;
   QCheckBox* m_ShowNodesContainingNoData;
-  QCheckBox* m_GlobalReinitOnNodeDelete;
-  QCheckBox* m_GlobalReinitOnNodeAdded;
   QCheckBox* m_UseSurfaceDecimation;
   QCheckBox* m_AllowParentChange;
   berry::IPreferences::Pointer m_DataManagerPreferencesNode;

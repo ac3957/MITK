@@ -25,18 +25,19 @@ This file is based heavily on a corresponding ITK filter.
 #include <itkProcessObject.h>
 #include <itkVectorContainer.h>
 #include <itkImageSource.h>
+#include <mitkPeakImage.h>
 
 namespace itk{
-/** \brief Evaluates the voxel-wise angular error between two sets of directions.
+/** \brief Evaluates the voxel-wise angular error between two sets of peak images.
  */
 
 template< class PixelType >
-class EvaluateDirectionImagesFilter : public ImageSource< Image< PixelType, 3 > >
+class ComparePeakImagesFilter : public ImageSource< Image< PixelType, 3 > >
 {
 
 public:
 
-    typedef EvaluateDirectionImagesFilter Self;
+    typedef ComparePeakImagesFilter Self;
     typedef SmartPointer<Self>                          Pointer;
     typedef SmartPointer<const Self>                    ConstPointer;
     typedef ImageSource< Image< PixelType, 3 > >        Superclass;
@@ -50,18 +51,17 @@ public:
     /** Runtime information support. */
     itkTypeMacro(EvaluateDirectionImagesFilter, ImageToImageFilter)
 
-    typedef Vector< float, 3 >                                  DirectionType;
-    typedef Image< DirectionType, 3 >                           DirectionImageType;
-    typedef VectorContainer< unsigned int, DirectionImageType::Pointer > DirectionImageContainerType;
     typedef Image< float, 3 >                                   FloatImageType;
     typedef Image< bool, 3 >                                    BoolImageType;
     typedef Image< unsigned char, 3 >                           UCharImageType;
+    typedef mitk::PeakImage::ItkPeakImageType                   PeakImageType;
+    typedef vnl_vector_fixed< PixelType, 3 >                    PeakType;
 
-    itkSetMacro( ImageSet , DirectionImageContainerType::Pointer)           ///< test image containers
-    itkSetMacro( ReferenceImageSet , DirectionImageContainerType::Pointer)  ///< reference image containers
+    itkSetMacro( TestImage , PeakImageType::Pointer)
+    itkSetMacro( ReferenceImage , PeakImageType::Pointer)
     itkSetMacro( MaskImage , UCharImageType::Pointer)                       ///< Calculation is only performed inside of the mask image.
-    itkSetMacro( IgnoreMissingDirections , bool)                            ///< If in one voxel, the number of directions differs between the test container and the reference, the excess directions are ignored. Otherwise, the error to the next closest direction is calculated.
-    itkSetMacro( IgnoreEmptyVoxels , bool)                                  ///< Don't increase error if either reference or test voxel is empty.
+    itkSetMacro( IgnoreMissingTestDirections , bool)
+    itkSetMacro( IgnoreMissingRefDirections , bool)
 
     /** Output statistics of the measured angular errors. */
     itkGetMacro( MeanAngularError, float)
@@ -78,16 +78,17 @@ public:
     itkGetMacro( MedianLengthError, float)
 
 protected:
-    EvaluateDirectionImagesFilter();
-    ~EvaluateDirectionImagesFilter() {}
+    ComparePeakImagesFilter();
+    ~ComparePeakImagesFilter() override {}
 
-    void GenerateData();
+    void GenerateData() override;
 
     UCharImageType::Pointer                  m_MaskImage;
-    DirectionImageContainerType::Pointer     m_ImageSet;
-    DirectionImageContainerType::Pointer     m_ReferenceImageSet;
-    bool                                     m_IgnoreMissingDirections;
-    bool                                     m_IgnoreEmptyVoxels;
+    PeakImageType::Pointer                   m_TestImage;
+    PeakImageType::Pointer                   m_ReferenceImage;
+
+    bool                                     m_IgnoreMissingRefDirections;
+    bool                                     m_IgnoreMissingTestDirections;
     double                                   m_MeanAngularError;
     double                                   m_MedianAngularError;
     double                                   m_MaxAngularError;
@@ -101,7 +102,7 @@ protected:
     double                                   m_VarLengthError;
     std::vector< double >                    m_LengthErrorVector;
 
-    double                                  m_Eps;
+    double                                   m_Eps;
 };
 
 }

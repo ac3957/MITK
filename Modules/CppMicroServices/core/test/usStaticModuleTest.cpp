@@ -62,10 +62,10 @@ void frame020a(ModuleContext* mc, TestModuleListener& listener,
 #endif
 
   Module* moduleB = ModuleRegistry::GetModule("TestModuleB");
-  US_TEST_CONDITION_REQUIRED(moduleB != 0, "Test for existing module TestModuleB")
+  US_TEST_CONDITION_REQUIRED(moduleB != nullptr, "Test for existing module TestModuleB")
 
   Module* moduleImportedByB = ModuleRegistry::GetModule("TestModuleImportedByB");
-  US_TEST_CONDITION_REQUIRED(moduleImportedByB != 0, "Test for existing module TestModuleImportedByB")
+  US_TEST_CONDITION_REQUIRED(moduleImportedByB != nullptr, "Test for existing module TestModuleImportedByB")
 
   US_TEST_CONDITION(moduleB->GetName() == "TestModuleB", "Test module name")
 
@@ -86,7 +86,7 @@ void frame020a(ModuleContext* mc, TestModuleListener& listener,
       US_TEST_CONDITION(mc->UngetService(refs.front()), "Test if Service UnGet for first service returns true");
       US_TEST_CONDITION(mc->UngetService(refs.back()), "Test if Service UnGet for second service returns true");
     }
-    catch (const std::logic_error le)
+    catch (const std::logic_error &le)
     {
       US_TEST_FAILED_MSG(<< "UnGetService exception: " << le.what())
     }
@@ -124,10 +124,10 @@ void frame020a(ModuleContext* mc, TestModuleListener& listener,
 void frame030b(ModuleContext* mc, TestModuleListener& listener, SharedLibrary& libB)
 {
   Module* moduleB = ModuleRegistry::GetModule("TestModuleB");
-  US_TEST_CONDITION_REQUIRED(moduleB != 0, "Test for non-null module")
+  US_TEST_CONDITION_REQUIRED(moduleB != nullptr, "Test for non-null module")
 
   Module* moduleImportedByB = ModuleRegistry::GetModule("TestModuleImportedByB");
-  US_TEST_CONDITION_REQUIRED(moduleImportedByB != 0, "Test for non-null module")
+  US_TEST_CONDITION_REQUIRED(moduleImportedByB != nullptr, "Test for non-null module")
 
   std::vector<ServiceReferenceU> refs
       = mc->GetServiceReferences("us::TestModuleBService");

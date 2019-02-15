@@ -1,1 +1,5 @@
-add_subdirectory(autoload/IO)
+MITK_CREATE_MODULE(
+  DEPENDS MitkCore MitkDICOMReader
+  PACKAGE_DEPENDS
+    PRIVATE DCMTK
+)

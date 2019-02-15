@@ -8,7 +8,7 @@ set(MITK_PLUGINS
   org.blueberry.core.commands:OFF
   org.blueberry.core.jobs:OFF
   org.blueberry.ui.qt:OFF
-  org.blueberry.ui.qt.help:OFF
+  org.blueberry.ui.qt.help:ON
   org.blueberry.ui.qt.log:ON
   org.blueberry.ui.qt.objectinspector:OFF
 
@@ -23,7 +23,6 @@ set(MITK_PLUGINS
   org.mitk.planarfigure:ON
   org.mitk.core.ext:OFF
   org.mitk.core.jobs:OFF
-  org.mitk.simulation:OFF
   org.mitk.gui.qt.application:ON
   org.mitk.gui.qt.coreapplication:OFF
   org.mitk.gui.qt.ext:OFF
@@ -32,9 +31,11 @@ set(MITK_PLUGINS
   org.mitk.gui.qt.stdmultiwidgeteditor:ON
   org.mitk.gui.qt.common.legacy:OFF
   org.mitk.gui.qt.cmdlinemodules:OFF
+  org.mitk.gui.qt.chartExample:OFF
   org.mitk.gui.qt.diffusionimagingapp:OFF
   org.mitk.gui.qt.datamanager:ON
   org.mitk.gui.qt.datamanagerlight:OFF
+  org.mitk.gui.qt.datastorageviewertest:OFF
   org.mitk.gui.qt.properties:ON
   org.mitk.gui.qt.basicimageprocessing:OFF
   org.mitk.gui.qt.dicom:OFF
@@ -50,12 +51,13 @@ set(MITK_PLUGINS
   org.mitk.gui.qt.diffusionimaging.preprocessing:OFF
   org.mitk.gui.qt.diffusionimaging.reconstruction:OFF
   org.mitk.gui.qt.diffusionimaging.registration:OFF
-  org.mitk.gui.qt.diffusionimaging.tbss:OFF
   org.mitk.gui.qt.diffusionimaging.tractography:OFF
+  org.mitk.gui.qt.diffusionimaging.python:OFF
   org.mitk.gui.qt.dosevisualization:OFF
   org.mitk.gui.qt.geometrytools:OFF
   org.mitk.gui.qt.igtexamples:OFF
   org.mitk.gui.qt.igttracking:OFF
+  org.mitk.gui.qt.lasercontrol:OFF
   org.mitk.gui.qt.openigtlink:OFF
   org.mitk.gui.qt.imagecropper:OFF
   org.mitk.gui.qt.imagenavigator:ON
@@ -68,13 +70,18 @@ set(MITK_PLUGINS
   org.mitk.gui.qt.python:OFF
   org.mitk.gui.qt.remeshing:OFF
   org.mitk.gui.qt.segmentation:OFF
-  org.mitk.gui.qt.simulation:OFF
   org.mitk.gui.qt.aicpregistration:OFF
   org.mitk.gui.qt.renderwindowmanager:OFF
+  org.mitk.gui.qt.semanticrelations:OFF
   org.mitk.gui.qt.toftutorial:OFF
   org.mitk.gui.qt.tofutil:OFF
   org.mitk.gui.qt.tubegraph:OFF
   org.mitk.gui.qt.ugvisualization:OFF
+  org.mitk.gui.qt.photoacoustics.pausviewer:OFF
+  org.mitk.gui.qt.photoacoustics.pausmotioncompensation:OFF
+  org.mitk.gui.qt.photoacoustics.imageprocessing:OFF
+  org.mitk.gui.qt.photoacoustics.simulation:OFF
+  org.mitk.gui.qt.photoacoustics.spectralunmixing:OFF
   org.mitk.gui.qt.ultrasound:OFF
   org.mitk.gui.qt.volumevisualization:OFF
   org.mitk.gui.qt.eventrecorder:OFF
@@ -83,6 +90,7 @@ set(MITK_PLUGINS
   org.mitk.gui.qt.spectrocamrecorder:OFF
   org.mitk.gui.qt.classificationsegmentation:OFF
   org.mitk.gui.qt.overlaymanager:OFF
+  org.mitk.gui.qt.igt.app.hummelprotocolmeasurements:OFF
   org.mitk.gui.qt.multilabelsegmentation:OFF
   org.mitk.matchpoint.core.helper:OFF
   org.mitk.gui.qt.matchpoint.algorithm.browser:OFF
@@ -93,5 +101,15 @@ set(MITK_PLUGINS
   org.mitk.gui.qt.matchpoint.visualizer:OFF
   org.mitk.gui.qt.matchpoint.evaluator:OFF
   org.mitk.gui.qt.matchpoint.manipulator:OFF
+  org.mitk.gui.qt.preprocessing.resampling:OFF
+  org.mitk.gui.qt.radiomics:OFF
   org.mitk.gui.qt.cest:OFF
+  org.mitk.gui.qt.fit.demo:OFF
+  org.mitk.gui.qt.fit.inspector:OFF
+  org.mitk.gui.qt.fit.genericfitting:OFF
+  org.mitk.gui.qt.pharmacokinetics.mri:OFF
+  org.mitk.gui.qt.pharmacokinetics.pet:OFF
+  org.mitk.gui.qt.pharmacokinetics.simulation:OFF
+  org.mitk.gui.qt.pharmacokinetics.curvedescriptor:OFF
+  org.mitk.gui.qt.pharmacokinetics.concentration.mri:OFF
 )

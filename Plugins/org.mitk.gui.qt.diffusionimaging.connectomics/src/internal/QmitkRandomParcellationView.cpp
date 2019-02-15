@@ -65,7 +65,7 @@ void QmitkRandomParcellationView::CreateQtPartControl( QWidget *parent )
   connect( m_Controls.radioButtonSmallestParcel, SIGNAL(clicked()), this, SLOT(OnRadioButtonSmallestParcelChanged(int)));
 }
 
-void QmitkRandomParcellationView::OnMergingCheckboxChanged(int state)
+void QmitkRandomParcellationView::OnMergingCheckboxChanged(int )
 {
   if (m_Controls.checkBoxMerging->isChecked())
   {
@@ -80,7 +80,7 @@ void QmitkRandomParcellationView::OnMergingCheckboxChanged(int state)
   }
 }
 
-void QmitkRandomParcellationView::OnRadioButtonNumberParcelsChanged(int state)
+void QmitkRandomParcellationView::OnRadioButtonNumberParcelsChanged(int )
 {
   if (m_Controls.radioButtonNumberParcels->isChecked())
   {
@@ -93,7 +93,7 @@ void QmitkRandomParcellationView::OnRadioButtonNumberParcelsChanged(int state)
   }
 }
 
-void QmitkRandomParcellationView::OnRadioButtonSmallestParcelChanged(int state)
+void QmitkRandomParcellationView::OnRadioButtonSmallestParcelChanged(int )
 {
   if (m_Controls.radioButtonSmallestParcel->isChecked())
   {
@@ -128,7 +128,6 @@ void QmitkRandomParcellationView::OnSelectionChanged(berry::IWorkbenchPart::Poin
 template <typename TPixel, unsigned int VImageDimension>
 void QmitkRandomParcellationView::ShowNumberOfVoxels( itk::Image<TPixel, VImageDimension> * inputImage)
 {
-  typedef itk::Image< TPixel, VImageDimension > ImageType;
 
   mitk::RegionVoxelCounter<TPixel, VImageDimension> counter;
   counter.SetRegion(inputImage->GetLargestPossibleRegion());
@@ -154,7 +153,7 @@ void QmitkRandomParcellationView::SelectRandomNodes()
   if (!node)
   {
     // Nothing selected. Inform the user and return
-    QMessageBox::information( NULL, "No image available", "Please load and select an image before starting image processing.");
+    QMessageBox::information( nullptr, "No image available", "Please load and select an image before starting image processing.");
     return;
   }
 
@@ -235,7 +234,7 @@ void QmitkRandomParcellationView::GetRandomParcels( itk::Image<TPixel, VImageDim
   //WARNINGS
   if (numberNodes > numberVoxels )
   {
-    QMessageBox::information( NULL, "Smaller Number of Nodes", "The number of nodes is greater than the number of voxels. Please choose a smaller number!");
+    QMessageBox::information( nullptr, "Smaller Number of Nodes", "The number of nodes is greater than the number of voxels. Please choose a smaller number!");
     return;
   }
 
@@ -244,7 +243,7 @@ void QmitkRandomParcellationView::GetRandomParcels( itk::Image<TPixel, VImageDim
     int numberParcels = m_Controls.spinBoxNumberParcels->value();
     if (numberNodes<numberParcels )
     {
-      QMessageBox::information( NULL, "Smaller Number of Parcels", "The number of parcels is greater than the number of nodes. Please choose a smaller number of parcels!");
+      QMessageBox::information( nullptr, "Smaller Number of Parcels", "The number of parcels is greater than the number of nodes. Please choose a smaller number of parcels!");
       return;
     }
   }
@@ -254,7 +253,7 @@ void QmitkRandomParcellationView::GetRandomParcels( itk::Image<TPixel, VImageDim
     int sizeSmallestParcel = m_Controls.spinBoxSmallestParcel->value();
     if (sizeSmallestParcel > numberVoxels )
     {
-      QMessageBox::information( NULL, "Smaller Size", "The size of the smallest parcel is greater than the number of voxels. Please choose a smaller size!");
+      QMessageBox::information( nullptr, "Smaller Size", "The size of the smallest parcel is greater than the number of voxels. Please choose a smaller size!");
       return;
     }
   }
@@ -278,7 +277,7 @@ void QmitkRandomParcellationView::GetRandomParcels( itk::Image<TPixel, VImageDim
   generator.ShowSizeOfRegions();
 
   //Check if the Merge-Buttons are chosen
-  int newNumberNodes;
+  int newNumberNodes = 0;
 
   if (m_Controls.checkBoxMerging->isChecked())
   {

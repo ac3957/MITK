@@ -36,16 +36,17 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkAlgorithmInfoSelectionProvider.h"
 
 // MatchPoint
-#include <mapRegistrationAlgorithmInterface.h>
-#include <mapAlgorithmEvents.h>
-#include <mapAlgorithmWrapperEvent.h>
-#include <mapExceptionObjectMacros.h>
-#include <mapDeploymentDLLDirectoryBrowser.h>
+#include "mapRegistrationAlgorithmInterface.h"
+#include "mapAlgorithmEvents.h"
+#include "mapAlgorithmWrapperEvent.h"
+#include "mapExceptionObjectMacros.h"
+#include "mapDeploymentDLLDirectoryBrowser.h"
+#include "mapDeploymentEvents.h"
 
 const std::string QmitkMatchPointBrowser::VIEW_ID = "org.mitk.views.matchpoint.algorithm.browser";
 
 QmitkMatchPointBrowser::QmitkMatchPointBrowser()
-    : m_Parent(NULL), m_LoadedDLLHandle(NULL), m_LoadedAlgorithm(NULL)
+    : m_Parent(nullptr), m_LoadedDLLHandle(nullptr), m_LoadedAlgorithm(nullptr)
 {
 }
 
@@ -82,6 +83,12 @@ void QmitkMatchPointBrowser::OnSearchFolderButtonPushed()
     else
     {
         map::deployment::DLLDirectoryBrowser::Pointer browser = map::deployment::DLLDirectoryBrowser::New();
+        auto validCommand = ::itk::MemberCommand<QmitkMatchPointBrowser>::New();
+        validCommand->SetCallbackFunction(this, &QmitkMatchPointBrowser::OnValidDeploymentEvent);
+        browser->AddObserver(::map::events::ValidDLLEvent(), validCommand);
+        auto invalidCommand = ::itk::MemberCommand<QmitkMatchPointBrowser>::New();
+        invalidCommand->SetCallbackFunction(this, &QmitkMatchPointBrowser::OnInvalidDeploymentEvent);
+        browser->AddObserver(::map::events::InvalidDLLEvent(), invalidCommand);
 
         foreach(QString path, m_currentSearchPaths)
         {
@@ -102,11 +109,11 @@ void QmitkMatchPointBrowser::OnSearchFolderButtonPushed()
 void QmitkMatchPointBrowser::OnAlgoListSelectionChanged(const QModelIndex& index)
 {
     QVariant vIndex = index.data(Qt::UserRole).toInt();
-    map::deployment::DLLInfo::ConstPointer currentItemInfo = NULL;
+    map::deployment::DLLInfo::ConstPointer currentItemInfo = nullptr;
 
     if (vIndex.isValid())
     {
-        int algListIndex = vIndex.toInt();
+        std::size_t algListIndex = vIndex.toInt();
 
         if (algListIndex < m_DLLInfoList.size())
         {
@@ -131,6 +138,24 @@ void QmitkMatchPointBrowser::OnSearchChanged(const QString& text)
     m_filterProxy->setFilterRegExp(text);
     m_filterProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
 };
+
+void QmitkMatchPointBrowser::OnInvalidDeploymentEvent(const ::itk::Object *, const itk::EventObject &event)
+{
+  auto deployEvent = dynamic_cast<const ::map::events::InvalidDLLEvent*>(&event);
+
+  this->Error(QString("Error when try to inspect deployed registration algorithm. Details: ")+QString::fromStdString(deployEvent->getComment()));
+}
+
+void QmitkMatchPointBrowser::OnValidDeploymentEvent(const ::itk::Object *, const itk::EventObject &event)
+{
+  auto deployEvent = dynamic_cast<const ::map::events::ValidDLLEvent*>(&event);
+
+  auto info = static_cast<const ::map::deployment::DLLInfo*>(deployEvent->getData());
+
+  MITK_INFO << "Successfully inspected deployed registration algorithm. UID: " << info->getAlgorithmUID().toStr() << ". Path: " << info->getLibraryFilePath();
+
+}
+
 
 void QmitkMatchPointBrowser::CreateQtPartControl(QWidget* parent)
 {
@@ -208,7 +233,7 @@ void QmitkMatchPointBrowser::RetrieveAndStorePreferenceValues()
     {
         char* deployedAlgorithmLoadPath = getenv("MAP_MDRA_LOAD_PATH");
 
-        if (deployedAlgorithmLoadPath != NULL)
+        if (deployedAlgorithmLoadPath != nullptr)
         {
             // The load path may in fact be a semi-colon or colon separated list of directories, not just one.
             QString paths(deployedAlgorithmLoadPath);

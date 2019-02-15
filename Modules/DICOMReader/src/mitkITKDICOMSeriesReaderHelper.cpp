@@ -16,7 +16,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 //#define MBILOG_ENABLE_DEBUG
 
-#include <dcvrdt.h>
+#include <dcmtk/dcmdata/dcvrdt.h>
 
 #define BOOST_DATE_TIME_NO_LIB
 //Prevent unnecessary/unwanted auto link in this compilation when activating boost libraries in the MITK superbuild
@@ -33,7 +33,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkDICOMGDCMTagScanner.h"
 #include "mitkArbitraryTimeGeometry.h"
 
-#include "dcvrda.h"
+#include "dcmtk/dcmdata/dcvrda.h"
 
 
 const mitk::DICOMTag mitk::ITKDICOMSeriesReaderHelper::AcquisitionDateTag = mitk::DICOMTag( 0x0008, 0x0022 );
@@ -238,7 +238,7 @@ boost::posix_time::ptime ConvertOFDateTimeToPTime( const OFDateTime& time )
   const boost::posix_time::time_duration boostTime =
     boost::posix_time::hours( time.getTime().getHour() )
     + boost::posix_time::minutes( time.getTime().getMinute() )
-    + boost::posix_time::seconds( time.getTime().getSecond() )
+    + boost::posix_time::seconds( static_cast<int>(time.getTime().getSecond()) )
     + boost::posix_time::milliseconds( time.getTime().getMilliSecond() );
 
   boost::posix_time::ptime result( boostDate, boostTime );
@@ -300,7 +300,7 @@ bool mitk::ITKDICOMSeriesReaderHelper::ExtractDateTimeBoundsAndTriggerOfTimeStep
 
   triggerBounds = TimeBounds(0.0);
 
-  for (DICOMDatasetAccessingImageFrameList::const_iterator pos = frameList.cbegin(); pos != frameList.cend(); ++pos)
+  for (auto pos = frameList.cbegin(); pos != frameList.cend(); ++pos)
   {
     const std::string aqDateStr = (*pos)->GetTagValueAsString(AcquisitionDateTag).value;
     const std::string aqTimeStr = (*pos)->GetTagValueAsString(AcquisitionTimeTag).value;
@@ -377,15 +377,13 @@ mitk::ITKDICOMSeriesReaderHelper::TimeBoundsList
   TimeBoundsList result;
 
   OFDateTime baseLine;
-  bool baseLineSet = false;
 
   // extract the timebounds
   DateTimeBounds baselineDateTimeBounds;
   TimeBounds triggerBounds;
-  StringContainerList::const_iterator pos = filenamesOfTimeSteps.cbegin();
+  auto pos = filenamesOfTimeSteps.cbegin();
   ExtractDateTimeBoundsAndTriggerOfTimeStep(*pos, baselineDateTimeBounds, triggerBounds);
   baseLine = baselineDateTimeBounds[0];
-  baseLineSet = true;
 
   // timebounds for baseline is 0
   TimeBounds bounds( 0.0 );
@@ -422,7 +420,7 @@ mitk::TimeGeometry::Pointer
 
   double check = 0.0;
   const auto boundListSize = boundsList.size();
-  for ( auto pos = 0; pos < boundListSize; ++pos )
+  for ( std::size_t pos = 0; pos < boundListSize; ++pos )
   {
     check += boundsList[pos][0];
     check += boundsList[pos][1];
@@ -441,7 +439,7 @@ mitk::TimeGeometry::Pointer
     newTimeGeometry->ClearAllGeometries();
     newTimeGeometry->ReserveSpaceForGeometries( boundListSize );
 
-    for ( auto pos = 0; pos < boundListSize; ++pos )
+    for ( std::size_t pos = 0; pos < boundListSize; ++pos )
     {
       TimeBounds bounds = boundsList[pos];
       if ( pos + 1 < boundListSize )

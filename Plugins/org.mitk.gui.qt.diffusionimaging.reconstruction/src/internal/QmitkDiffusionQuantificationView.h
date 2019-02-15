@@ -18,8 +18,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #define _QMITKDIFFUSIONQUANTIFICATIONVIEW_H_INCLUDED
 
 #include <QmitkAbstractView.h>
-
 #include <string>
+#include <itkVectorImage.h>
 
 #include "ui_QmitkDiffusionQuantificationViewControls.h"
 /*!
@@ -42,25 +42,16 @@ class QmitkDiffusionQuantificationView : public QmitkAbstractView
   static const std::string VIEW_ID;
 
   QmitkDiffusionQuantificationView();
-  QmitkDiffusionQuantificationView(const QmitkDiffusionQuantificationView& other);
   virtual ~QmitkDiffusionQuantificationView();
 
+  typedef itk::VectorImage< short, 3 >                                    ItkDwiType;
+
   virtual void CreateQtPartControl(QWidget *parent) override;
-
-  /// \brief Creation of the connections of main and control widget
-  virtual void CreateConnections();
-
-  ///
-  /// Sets the focus to an internal widget.
-  ///
   virtual void SetFocus() override;
 
 protected slots:
 
-  void GFACheckboxClicked();
-
   void GFA();
-  void Curvature();
   void FA();
   void RA();
   void AD();
@@ -68,24 +59,27 @@ protected slots:
   void ClusterAnisotropy();
   void MD();
 
-  void QBIQuantify(int method);
-  void QBIQuantification(mitk::DataStorage::SetOfObjects::Pointer inImages,
-    int method) ;
+  void ADC_DWI();
+  void MD_DWI();
+
+  void OdfQuantify(int method);
+  void OdfQuantification(int method) ;
 
   void TensorQuantify(int method);
-  void TensorQuantification(mitk::DataStorage::SetOfObjects::Pointer inImages,
-    int method) ;
+  void TensorQuantification(int method) ;
+
+  void DoBallStickCalculation();
+  void DoMultiTensorCalculation();
+  void UpdateGui();
 
 protected:
+
+  void DoAdcCalculation(bool fit);
 
   /// \brief called by QmitkAbstractView when DataManager's selection has changed
   virtual void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer>& nodes) override;
 
   Ui::QmitkDiffusionQuantificationViewControls* m_Controls;
-
-  mitk::DataStorage::SetOfObjects::Pointer m_QBallImages;
-  mitk::DataStorage::SetOfObjects::Pointer m_TensorImages;
-
   static const float m_ScaleDAIValues;
 };
 

@@ -25,6 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkRawShModel.h>
 #include <itkAnalyticalDiffusionQballReconstructionImageFilter.h>
 #include <mitkPointSet.h>
+#include <itkLinearInterpolateImageFunction.h>
 
 namespace itk
 {
@@ -52,11 +53,10 @@ public:
     typedef itk::Image<unsigned char, 3>                                ItkUcharImgType;
     typedef mitk::FiberBundle::Pointer                                  FiberBundleType;
     typedef itk::VectorImage< double, 3 >                               DoubleDwiType;
-    typedef itk::Matrix<double, 3, 3>                                   MatrixType;
-    typedef itk::Image< double, 2 >                                     SliceType;
-    typedef itk::VnlForwardFFTImageFilter<SliceType>::OutputImageType   ComplexSliceType;
-    typedef itk::VectorImage< vcl_complex< double >, 3 >                ComplexDwiType;
-    typedef itk::Vector< double,3>                                      DoubleVectorType;
+    typedef itk::Matrix<float, 3, 3>                                    MatrixType;
+    typedef itk::Image< float, 2 >                                      Float2DImageType;
+    typedef itk::Image< vcl_complex< float >, 2 >                       Complex2DImageType;
+    typedef itk::Vector< float, 3>                                      VectorType;
 
     itkFactorylessNewMacro(Self)
     itkCloneMacro(Self)
@@ -66,11 +66,11 @@ public:
     itkSetMacro( FiberBundle, FiberBundleType )             ///< Input fiber bundle
     itkSetMacro( InputImage, typename OutputImageType::Pointer )     ///< Input diffusion-weighted image. If no fiber bundle is set, then the acquisition is simulated for this image without a new diffusion simulation.
     itkSetMacro( UseConstantRandSeed, bool )                ///< Seed for random generator.
-    void SetParameters( FiberfoxParameters<double> param )  ///< Simulation parameters.
+    void SetParameters( FiberfoxParameters param )  ///< Simulation parameters.
     { m_Parameters = param; }
 
     /** Output */
-    FiberfoxParameters<double> GetParameters(){ return m_Parameters; }
+    FiberfoxParameters GetParameters(){ return m_Parameters; }
     std::vector< ItkDoubleImgType::Pointer > GetVolumeFractions() ///< one double image for each compartment containing the corresponding volume fraction per voxel
     { return m_VolumeFractions; }
     mitk::LevelWindow GetLevelWindow()  ///< Level window is determined from the output image
@@ -80,26 +80,35 @@ public:
     itkGetMacro( KspaceImage, DoubleDwiType::Pointer )
     itkGetMacro( CoilPointset, mitk::PointSet::Pointer )
 
-    void GenerateData();
+    void GenerateData() override;
+
+    std::vector<DoubleDwiType::Pointer> GetOutputImagesReal() const
+    {
+      return m_OutputImagesReal;
+    }
+
+    std::vector<DoubleDwiType::Pointer> GetOutputImagesImag() const
+    {
+      return m_OutputImagesImag;
+    }
 
 protected:
 
     TractsToDWIImageFilter();
-    virtual ~TractsToDWIImageFilter();
-    itk::Point<float, 3> GetItkPoint(double point[3]);
+    ~TractsToDWIImageFilter() override;
     itk::Vector<double, 3> GetItkVector(double point[3]);
     vnl_vector_fixed<double, 3> GetVnlVector(double point[3]);
     vnl_vector_fixed<double, 3> GetVnlVector(Vector< float, 3 >& vector);
     double RoundToNearest(double num);
     std::string GetTime();
     bool PrepareLogFile();  /** Prepares the log file and returns true if successful or false if failed. */
-    void PrintToLog(string m, bool addTime=true, bool linebreak=true, bool stdOut=true);
+    void PrintToLog(std::string m, bool addTime=true, bool linebreak=true, bool stdOut=true);
 
     /** Transform generated image compartment by compartment, channel by channel and slice by slice using DFT and add k-space artifacts/effects. */
     DoubleDwiType::Pointer SimulateKspaceAcquisition(std::vector< DoubleDwiType::Pointer >& images);
 
     /** Generate signal of non-fiber compartments. */
-    void SimulateExtraAxonalSignal(ItkUcharImgType::IndexType index, double intraAxonalVolume, int g=-1);
+    void SimulateExtraAxonalSignal(ItkUcharImgType::IndexType& index, itk::Point<float, 3>& volume_fraction_point, double intraAxonalVolume, int g);
 
     /** Move fibers to simulate headmotion */
     void SimulateMotion(int g=-1);
@@ -108,10 +117,11 @@ protected:
     ItkDoubleImgType::Pointer NormalizeInsideMask(ItkDoubleImgType::Pointer image);
     void InitializeData();
     void InitializeFiberData();
-    double InterpolateValue(itk::Point<float, 3> itkP, ItkDoubleImgType::Pointer img);
+
+    itk::Point<float, 3> GetMovedPoint(itk::Index<3>& index, bool forward);
 
     // input
-    mitk::FiberfoxParameters<double>            m_Parameters;
+    mitk::FiberfoxParameters                    m_Parameters;
     FiberBundleType                             m_FiberBundle;
     typename OutputImageType::Pointer           m_InputImage;
 
@@ -119,6 +129,8 @@ protected:
     typename OutputImageType::Pointer           m_OutputImage;
     typename DoubleDwiType::Pointer             m_PhaseImage;
     typename DoubleDwiType::Pointer             m_KspaceImage;
+    std::vector < typename DoubleDwiType::Pointer > m_OutputImagesReal;
+    std::vector < typename DoubleDwiType::Pointer > m_OutputImagesImag;
     mitk::LevelWindow                           m_LevelWindow;
     std::vector< ItkDoubleImgType::Pointer >    m_VolumeFractions;
     std::string                                 m_StatusText;
@@ -132,7 +144,6 @@ protected:
     std::string                                 m_SpikeLog;
 
     // signal generation
-    FiberBundleType                             m_FiberBundleWorkingCopy;   ///< we work on an upsampled version of the input bundle
     FiberBundleType                             m_FiberBundleTransformed;   ///< transformed bundle simulating headmotion
     itk::Vector<double,3>                       m_WorkingSpacing;
     itk::Point<double,3>                        m_WorkingOrigin;
@@ -141,10 +152,9 @@ protected:
     std::vector< DoubleDwiType::Pointer >       m_CompartmentImages;
     ItkUcharImgType::Pointer                    m_TransformedMaskImage;     ///< copy of mask image (changes for each motion step)
     ItkUcharImgType::Pointer                    m_UpsampledMaskImage;       ///< helper image for motion simulation
-    DoubleVectorType                            m_Rotation;
-    DoubleVectorType                            m_Translation;
-    std::vector< DoubleVectorType >             m_Rotations;                ///<stores the individual rotation of each volume (needed for k-space simulation to obtain correct frequency map position)
-    std::vector< DoubleVectorType >             m_Translations;             ///<stores the individual translation of each volume (needed for k-space simulation to obtain correct frequency map position)
+    std::vector< MatrixType >                   m_RotationsInv;
+    std::vector< MatrixType >                   m_Rotations;                ///<stores the individual rotation of each volume (needed for k-space simulation to obtain correct frequency map position)
+    std::vector< VectorType >                   m_Translations;             ///<stores the individual translation of each volume (needed for k-space simulation to obtain correct frequency map position)
     double                                      m_mmRadius;
     double                                      m_SegmentVolume;
     bool                                        m_UseRelativeNonFiberVolumeFractions;
@@ -153,6 +163,8 @@ protected:
     int                                         m_NumMotionVolumes;
 
     itk::Statistics::MersenneTwisterRandomVariateGenerator::Pointer m_RandGen;
+    itk::LinearInterpolateImageFunction< ItkDoubleImgType, float >::Pointer   m_DoubleInterpolator;
+    itk::Vector<double,3>                       m_NullDir;
 };
 }
 

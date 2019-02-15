@@ -6,6 +6,8 @@ set(CPP_FILES
   IODataStructures/FiberBundle/mitkFiberBundle.cpp
   IODataStructures/FiberBundle/mitkTrackvis.cpp
   IODataStructures/PlanarFigureComposite/mitkPlanarFigureComposite.cpp
+  IODataStructures/mitkTractographyForest.cpp
+  IODataStructures/mitkFiberfoxParameters.cpp
 
   # Interactions
 
@@ -29,6 +31,7 @@ set(H_FILES
   IODataStructures/FiberBundle/mitkFiberBundle.h
   IODataStructures/FiberBundle/mitkTrackvis.h
   IODataStructures/mitkFiberfoxParameters.h
+  IODataStructures/mitkTractographyForest.h
 
   # Algorithms
   Algorithms/itkTractDensityImageFilter.h
@@ -38,6 +41,11 @@ set(H_FILES
   Algorithms/itkEvaluateDirectionImagesFilter.h
   Algorithms/itkEvaluateTractogramDirectionsFilter.h
   Algorithms/itkFiberCurvatureFilter.h
+  Algorithms/itkFitFibersToImageFilter.h
+  Algorithms/itkTractClusteringFilter.h
+  Algorithms/itkTractDistanceFilter.h
+  Algorithms/itkFiberExtractionFilter.h
+  Algorithms/itkTdiToVolumeFractionFilter.h
 
   # Tractography
   Algorithms/TrackingHandlers/mitkTrackingDataHandler.h
@@ -59,12 +67,23 @@ set(H_FILES
 
   Algorithms/itkStreamlineTrackingFilter.h
 
+  # Clustering
+  Algorithms/ClusteringMetrics/mitkClusteringMetric.h
+  Algorithms/ClusteringMetrics/mitkClusteringMetricEuclideanMean.h
+  Algorithms/ClusteringMetrics/mitkClusteringMetricEuclideanMax.h
+  Algorithms/ClusteringMetrics/mitkClusteringMetricEuclideanStd.h
+  Algorithms/ClusteringMetrics/mitkClusteringMetricAnatomic.h
+  Algorithms/ClusteringMetrics/mitkClusteringMetricScalarMap.h
+  Algorithms/ClusteringMetrics/mitkClusteringMetricInnerAngles.h
+  Algorithms/ClusteringMetrics/mitkClusteringMetricLength.h
+
   # Fiberfox
   Fiberfox/itkFibersFromPlanarFiguresFilter.h
   Fiberfox/itkTractsToDWIImageFilter.h
   Fiberfox/itkKspaceImageFilter.h
   Fiberfox/itkDftImageFilter.h
   Fiberfox/itkFieldmapGeneratorFilter.h
+  Fiberfox/itkRandomPhantomFilter.h
 
   Fiberfox/SignalModels/mitkDiffusionSignalModel.h
   Fiberfox/SignalModels/mitkTensorModel.h
@@ -86,7 +105,4 @@ set(RESOURCE_FILES
   # Binary directory resources
   FiberTrackingLUTBaryCoords.bin
   FiberTrackingLUTIndices.bin
-
-  # Shaders
-  Shaders/mitkShaderFiberClipping.xml
 )

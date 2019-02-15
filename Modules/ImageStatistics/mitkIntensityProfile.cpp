@@ -21,6 +21,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImageAccessByItk.h>
 #include <mitkImagePixelReadAccessor.h>
 #include <mitkPixelTypeMultiplex.h>
+#include <mitkImageStatisticsContainer.h>
 #include "mitkIntensityProfile.h"
 
 using namespace mitk;
@@ -237,7 +238,7 @@ IntensityProfile::Pointer mitk::ComputeIntensityProfile(Image::Pointer image, co
   return ::ComputeIntensityProfile(image, CreatePathFromPoints(image->GetGeometry(), startPoint, endPoint), numSamples, interpolator);
 }
 
-IntensityProfile::InstanceIdentifier mitk::ComputeGlobalMaximum(IntensityProfile::Pointer intensityProfile, IntensityProfile::MeasurementType &max)
+IntensityProfile::InstanceIdentifier mitk::ComputeGlobalMaximum(IntensityProfile::ConstPointer intensityProfile, IntensityProfile::MeasurementType &max)
 {
   max = -vcl_numeric_limits<IntensityProfile::MeasurementType>::min();
   IntensityProfile::InstanceIdentifier maxIndex = 0;
@@ -259,7 +260,7 @@ IntensityProfile::InstanceIdentifier mitk::ComputeGlobalMaximum(IntensityProfile
   return maxIndex;
 }
 
-IntensityProfile::InstanceIdentifier mitk::ComputeGlobalMinimum(IntensityProfile::Pointer intensityProfile, IntensityProfile::MeasurementType &min)
+IntensityProfile::InstanceIdentifier mitk::ComputeGlobalMinimum(IntensityProfile::ConstPointer intensityProfile, IntensityProfile::MeasurementType &min)
 {
   min = vcl_numeric_limits<IntensityProfile::MeasurementType>::max();
   IntensityProfile::InstanceIdentifier minIndex = 0;
@@ -281,7 +282,7 @@ IntensityProfile::InstanceIdentifier mitk::ComputeGlobalMinimum(IntensityProfile
   return minIndex;
 }
 
-IntensityProfile::InstanceIdentifier mitk::ComputeCenterOfMaximumArea(IntensityProfile::Pointer intensityProfile, IntensityProfile::InstanceIdentifier radius)
+IntensityProfile::InstanceIdentifier mitk::ComputeCenterOfMaximumArea(IntensityProfile::ConstPointer intensityProfile, IntensityProfile::InstanceIdentifier radius)
 {
   //const IntensityProfile::MeasurementType min = intensityProfile->GetMeasurementVector(ComputeGlobalMinimum(intensityProfile))[0];
   IntensityProfile::MeasurementType min;
@@ -312,7 +313,7 @@ IntensityProfile::InstanceIdentifier mitk::ComputeCenterOfMaximumArea(IntensityP
   return centerOfMaxArea;
 }
 
-std::vector<IntensityProfile::MeasurementType> mitk::CreateVectorFromIntensityProfile(IntensityProfile::Pointer intensityProfile)
+std::vector<IntensityProfile::MeasurementType> mitk::CreateVectorFromIntensityProfile(IntensityProfile::ConstPointer intensityProfile)
 {
   std::vector<IntensityProfile::MeasurementType> result;
   result.reserve(intensityProfile->Size());
@@ -338,7 +339,7 @@ IntensityProfile::Pointer mitk::CreateIntensityProfileFromVector(const std::vect
   return result;
 }
 
-void mitk::ComputeIntensityProfileStatistics(IntensityProfile::Pointer intensityProfile, ImageStatisticsCalculator::StatisticsContainer::Pointer stats)
+void mitk::ComputeIntensityProfileStatistics(IntensityProfile::ConstPointer intensityProfile, ImageStatisticsContainer::StatisticsObject& stats)
 {
   typedef std::vector<IntensityProfile::MeasurementType> StatsVecType;
 
@@ -348,7 +349,7 @@ void mitk::ComputeIntensityProfileStatistics(IntensityProfile::Pointer intensity
   IntensityProfile::MeasurementType max;
   mitk::ComputeGlobalMinimum( intensityProfile, min );
   mitk::ComputeGlobalMaximum( intensityProfile, max );
-  StatsVecType::size_type numSamples = statsVec.size();
+  auto numSamples = static_cast<mitk::ImageStatisticsContainer::VoxelCountType>(statsVec.size());
 
   double mean = 0.0;
   double rms = 0.0;
@@ -358,8 +359,8 @@ void mitk::ComputeIntensityProfileStatistics(IntensityProfile::Pointer intensity
     mean += val;
     rms += val*val;
   }
-  mean /= numSamples;
-  rms /= numSamples;
+  mean /= static_cast<double>(numSamples);
+  rms /= static_cast<double>(numSamples);
 
   double var = 0.0;
   for ( StatsVecType::const_iterator it = statsVec.begin(); it != statsVec.end(); ++it )
@@ -367,14 +368,15 @@ void mitk::ComputeIntensityProfileStatistics(IntensityProfile::Pointer intensity
     double diff = *it - mean;
     var += diff*diff;
   }
-  var /= ( numSamples - 1 );
+  var /= (static_cast<double>(numSamples) - 1 );
 
   rms = sqrt( rms );
 
-  stats->SetMin( static_cast<double>( min ) );
-  stats->SetMax( static_cast<double>( max ) );
-  stats->SetN( numSamples );
-  stats->SetMean( mean );
-  stats->SetVariance( var );
-  stats->SetRMS( rms );
+  stats.AddStatistic(mitk::ImageStatisticsConstants::MINIMUM(), min);
+  stats.AddStatistic(mitk::ImageStatisticsConstants::MAXIMUM(), max);
+  stats.AddStatistic(mitk::ImageStatisticsConstants::NUMBEROFVOXELS(), numSamples);
+  stats.AddStatistic(mitk::ImageStatisticsConstants::MEAN(), mean);
+  stats.AddStatistic(mitk::ImageStatisticsConstants::STANDARDDEVIATION(), sqrt(var));
+  stats.AddStatistic(mitk::ImageStatisticsConstants::VARIANCE(), var);
+  stats.AddStatistic(mitk::ImageStatisticsConstants::RMS(), rms);
 }

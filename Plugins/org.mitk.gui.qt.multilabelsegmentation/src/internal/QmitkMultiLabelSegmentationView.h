@@ -63,28 +63,25 @@ public:
 
 protected slots:
 
-  /// \brief reaction to the selection of a new patient (reference) image in the DataStorage combobox
-  void OnReferenceSelectionChanged(const mitk::DataNode *node);
+  // reaction to the shortcut for toggling the visibility of the working node
+  void OnVisibilityShortcutActivated();
 
-  /// \brief reaction to the selection of a new Segmentation (working) image in the DataStorage combobox
-  void OnSegmentationSelectionChanged(const mitk::DataNode *node);
+  // reaction to the shortcut for iterating over all labels
+  void OnLabelToggleShortcutActivated();
 
-  /// \brief reaction to ...
-  void OnInterpolationSelectionChanged(int);
-
-  /// \brief reaction to the selection of any 2D segmentation tool
+  // reaction to the selection of any 2D segmentation tool
   void OnManualTool2DSelected(int id);
 
-  /// \brief reaction to button "New Label"
+  // reaction to button "New Label"
   void OnNewLabel();
 
-  /// \brief reaction to button "Show Label Table"
+  // reaction to button "Show Label Table"
   void OnShowLabelTable(bool value);
 
-  /// \brief reaction to button "New Segmentation Session"
+  // reaction to button "New Segmentation Session"
   void OnNewSegmentationSession();
 
-  /// \brief reaction to signal "goToLabel" from labelset widget
+  // reaction to signal "goToLabel" from labelset widget
   void OnGoToLabel(const mitk::Point3D &pos);
 
   void OnResetView();
@@ -110,11 +107,31 @@ protected slots:
   // reaction to the button "Lock exterior"
   void OnLockExteriorToggled(bool);
 
+  // reaction to the selection of a new patient (reference) image in the DataStorage combobox
+  void OnReferenceSelectionChanged(const mitk::DataNode* node);
+
+  // reaction to the selection of a new Segmentation (working) image in the DataStorage combobox
+  void OnSegmentationSelectionChanged(const mitk::DataNode* node);
+
+  // reaction to ...
+  void OnInterpolationSelectionChanged(int);
+
 protected:
-  // invoked when the preferences were changed
-  void OnPreferencesChanged(const berry::IBerryPreferences *prefs) override;
+
+  // reimplemented from QmitkAbstractView
+  void OnSelectionChanged(berry::IWorkbenchPart::Pointer part, const QList<mitk::DataNode::Pointer> &nodes) override;
+
+  // reimplemented from QmitkAbstractView
+  void OnPreferencesChanged(const berry::IBerryPreferences* prefs) override;
+
+  // reimplemented from QmitkAbstractView
+  void NodeAdded(const mitk::DataNode* node) override;
+
+  // reimplemented from QmitkAbstractView
+  void NodeRemoved(const mitk::DataNode* node) override;
 
   void OnEstablishLabelSetConnection();
+
   void OnLooseLabelSetConnection();
 
   void SetFocus();
@@ -133,12 +150,6 @@ protected:
 
   /// \brief Checks if two images have the same size and geometry
   bool CheckForSameGeometry(const mitk::Image *image1, const mitk::Image *image2) const;
-
-  /// \brief Reimplemented from QmitkAbstractView
-  virtual void NodeAdded(const mitk::DataNode *node);
-
-  /// \brief Reimplemented from QmitkAbstractView
-  virtual void NodeRemoved(const mitk::DataNode *node);
 
   QString GetLastFileOpenPath();
 
@@ -160,6 +171,7 @@ protected:
   mitk::NodePredicateAnd::Pointer m_ReferencePredicate;
   mitk::NodePredicateAnd::Pointer m_SegmentationPredicate;
 
+  bool m_AutoSelectionEnabled;
   bool m_MouseCursorSet;
 
   mitk::SegmentationInteractor::Pointer m_Interactor;

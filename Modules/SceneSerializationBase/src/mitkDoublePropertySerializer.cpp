@@ -20,7 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkBasePropertySerializer.h"
 
 #include "mitkProperties.h"
-#include <boost/lexical_cast.hpp>
+#include <mitkLexicalCast.h>
 
 #include <MitkSceneSerializationBaseExports.h>
 
@@ -34,7 +34,7 @@ namespace mitk
     mitkClassMacro(DoublePropertySerializer, BasePropertySerializer);
     itkFactorylessNewMacro(Self) itkCloneMacro(Self)
 
-      virtual TiXmlElement *Serialize() override
+      TiXmlElement *Serialize() override
     {
       if (const DoubleProperty *prop = dynamic_cast<const DoubleProperty *>(m_Property.GetPointer()))
       {
@@ -48,7 +48,7 @@ namespace mitk
         return nullptr;
     }
 
-    virtual BaseProperty::Pointer Deserialize(TiXmlElement *element) override
+    BaseProperty::Pointer Deserialize(TiXmlElement *element) override
     {
       if (!element)
         return nullptr;
@@ -76,7 +76,7 @@ namespace mitk
 
   protected:
     DoublePropertySerializer() {}
-    virtual ~DoublePropertySerializer() {}
+    ~DoublePropertySerializer() override {}
   };
 
 } // namespace

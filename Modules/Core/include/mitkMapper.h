@@ -117,7 +117,7 @@ namespace mitk
     /** \brief Returns whether this is an vtk-based mapper
    * \deprecatedSince{2013_03} All mappers of superclass VTKMapper are vtk based, use a dynamic_cast instead
    */
-    virtual bool IsVtkBased() const = 0;
+    virtual bool IsVtkBased() const { return true; }
 
     /** \brief Calls the time step of the input data for the specified renderer and checks
     * whether the time step is valid and calls method GenerateDataForRenderer()
@@ -143,7 +143,7 @@ namespace mitk
     * \param node The node for which the properties are set
     * \param overwrite overwrite existing properties (default: \a false)
     * \param renderer defines which property list of node is used
-    * (default: \a NULL, i.e. default property list)
+    * (default: \a nullptr, i.e. default property list)
     */
     static void SetDefaultProperties(DataNode *node, BaseRenderer *renderer = nullptr, bool overwrite = false);
 
@@ -158,7 +158,7 @@ namespace mitk
     explicit Mapper();
 
     /** \brief virtual destructor in order to derive from this class */
-    virtual ~Mapper();
+    ~Mapper() override;
 
     /** \brief Generate the data needed for rendering (independent of a specific renderer)
      *  \deprecatedSince{2013_03} Use GenerateDataForRenderer(BaseRenderer* renderer) instead.
@@ -197,6 +197,12 @@ namespace mitk
     class MITKCORE_EXPORT BaseLocalStorage
     {
     public:
+      BaseLocalStorage() = default;
+      virtual ~BaseLocalStorage() = default;
+
+      BaseLocalStorage(const BaseLocalStorage &) = delete;
+      BaseLocalStorage & operator=(const BaseLocalStorage &) = delete;
+
       bool IsGenerateDataRequired(mitk::BaseRenderer *renderer, mitk::Mapper *mapper, mitk::DataNode *dataNode) const;
 
       inline void UpdateGenerateDataTime() { m_LastGenerateDataTime.Modified(); }

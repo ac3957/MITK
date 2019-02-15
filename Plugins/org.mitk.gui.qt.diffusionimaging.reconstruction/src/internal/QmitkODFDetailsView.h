@@ -27,7 +27,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <itkVectorImage.h>
 #include <itkImage.h>
 #include <itkOrientationDistributionFunction.h>
-#include <mitkQBallImage.h>
+#include <mitkOdfImage.h>
 #include <vtkTransform.h>
 #include <vtkDoubleArray.h>
 #include <vtkOdfSource.h>
@@ -37,6 +37,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkRenderer.h>
 #include <vtkCamera.h>
 #include <itkDiffusionTensor3D.h>
+#include <QmitkSliceNavigationListener.h>
+#include <mitkTensorImage.h>
 
 /*!
   \brief View displaying details of the orientation distribution function in the voxel at the current crosshair position.
@@ -55,18 +57,19 @@ public:
   QmitkODFDetailsView();
   virtual ~QmitkODFDetailsView();
 
-  typedef float TOdfPixelType;
-  typedef itk::Vector<TOdfPixelType,QBALL_ODFSIZE> OdfVectorType;
-  typedef itk::Image<OdfVectorType,3> OdfVectorImgType;
+  typedef mitk::OdfImage::ScalarPixelType TOdfPixelType;
+  typedef mitk::OdfImage::PixelType       OdfVectorType;
+  typedef mitk::OdfImage::ItkOdfImageType OdfVectorImgType;
 
-  typedef itk::DiffusionTensor3D< TOdfPixelType >  TensorPixelType;
-  typedef itk::Image< TensorPixelType, 3 >         TensorImageType;
+  typedef mitk::TensorImage::PixelType          TensorPixelType;
+  typedef mitk::TensorImage::ItkTensorImageType TensorImageType;
 
   virtual void CreateQtPartControl(QWidget *parent) override;
 
-  void OnSliceChanged(const itk::EventObject& e);
 
 protected slots:
+
+  void OnSliceChanged();
 
 protected:
 
@@ -84,29 +87,9 @@ protected:
 
   Ui::QmitkODFDetailsViewControls*  m_Controls;
 
-  /** observer flags */
-  int m_SliceObserverTag1;
-  int m_SliceObserverTag2;
-  int m_SliceObserverTag3;
-  int m_PropertyObserverTag;
-
-  /** ODF related variables like mesh structure, values etc. */
-  vtkPolyData*                      m_TemplateOdf;  ///< spherical base mesh
-  vtkSmartPointer<vtkTransform>     m_OdfTransform;
-  vtkSmartPointer<vtkDoubleArray>   m_OdfVals;
-  vtkSmartPointer<vtkOdfSource>     m_OdfSource;
-
   int                               m_OdfNormalization; ///< normalization method defined in the visualization view
-
-  /** rendering of the ODF */
-  vtkActor*                     m_VtkActor;
-  vtkPolyDataMapper*            m_VtkMapper;
-  vtkRenderer*                  m_Renderer;
-  vtkRenderWindow*              m_VtkRenderWindow;
-  vtkRenderWindowInteractor*    m_RenderWindowInteractor;
-  vtkCamera*                    m_Camera;
-
-  mitk::DataNode::Pointer m_ImageNode;
+  mitk::DataNode::Pointer       m_ImageNode;
+  QmitkSliceNavigationListener  m_SliceChangeListener;
 };
 
 

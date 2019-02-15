@@ -123,12 +123,12 @@ bool mitk::Material::Assignable(const Material &other) const
 {
   try
   {
-    const Material &otherinstance =
+    const auto &otherinstance =
       dynamic_cast<const Self &>(other); // dear compiler, please don't optimize this away! Thanks.
     otherinstance.GetOpacity();
     return true;
   }
-  catch (std::bad_cast)
+  catch (const std::bad_cast &)
   {
   }
   return false;
@@ -138,11 +138,11 @@ mitk::Material &mitk::Material::operator=(const mitk::Material &other)
 {
   try
   {
-    const Self &otherProp(dynamic_cast<const Self &>(other));
+    const auto &otherProp(dynamic_cast<const Self &>(other));
 
     Initialize(otherProp);
   }
-  catch (std::bad_cast)
+  catch (const std::bad_cast &)
   {
     // nothing to do then
   }
@@ -305,9 +305,9 @@ void mitk::Material::Initialize(const Material &property)
 
 bool mitk::Material::operator==(const Material &property) const
 {
-  const Self *other = dynamic_cast<const Self *>(&property);
+  const auto *other = dynamic_cast<const Self *>(&property);
 
-  if (other == NULL)
+  if (other == nullptr)
     return false;
   else
     return (m_Color == other->GetColor() && m_ColorCoefficient == other->GetColorCoefficient() &&

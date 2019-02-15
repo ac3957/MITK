@@ -32,18 +32,19 @@ namespace mitk {
     CESTDICOMReaderService(const std::string& description);
 
     /** Uses the BaseDICOMReaderService Read function and add extra steps for CEST meta data */
-    virtual std::vector<itk::SmartPointer<BaseData> > Read() override;
+    using AbstractFileReader::Read;
+    std::vector<itk::SmartPointer<BaseData> > Read() override;
 
   protected:
     /** Returns the reader instance that should be used. The decision may be based
     * one the passed relevant file list.*/
-    virtual mitk::DICOMFileReader::Pointer GetReader(const mitk::StringList& relevantFiles) const override;
+    mitk::DICOMFileReader::Pointer GetReader(const mitk::StringList& relevantFiles) const override;
 
   private:
 
-    virtual CESTDICOMReaderService* Clone() const override;
+    CESTDICOMReaderService* Clone() const override;
   };
 
 }
 
-#endif // MITKDICOMSERIESREADERSERVICE_H
+#endif // MITKCESTDICOMREADERSERVICE_H

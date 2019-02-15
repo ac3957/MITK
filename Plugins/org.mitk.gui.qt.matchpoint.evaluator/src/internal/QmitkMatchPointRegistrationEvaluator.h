@@ -33,12 +33,12 @@ See LICENSE.txt or http://www.mitk.org for details.
 \ingroup ${plugin_target}_internal
 */
 class QmitkMatchPointRegistrationEvaluator : public QmitkAbstractView, public mitk::IRenderWindowPartListener
-{  
+{
   // this is needed for all Qt objects that should have a Qt meta-object
   // (everything that derives from QObject and wants to have signal/slots)
   Q_OBJECT
 
-public:  
+public:
 
   static const std::string VIEW_ID;
 
@@ -52,7 +52,7 @@ public:
 
   virtual void CreateQtPartControl(QWidget *parent);
 
-  protected slots:
+protected slots:
 
     /// \brief Called when the user clicks the GUI button
 
@@ -60,7 +60,7 @@ public:
   void OnStopBtnPushed();
   void OnSettingsChanged(mitk::DataNode*);
 
-    void OnSliceChanged();
+  void OnSliceChanged();
 
 protected:
   /// \brief called by QmitkFunctionality when DataManager's selection has changed
@@ -102,6 +102,10 @@ private:
   itk::TimeStamp m_selectedNodeTime;
   itk::TimeStamp m_currentPositionTime;
 
+  bool m_activeEvaluation;
+  bool m_autoMoving;
+  bool m_autoTarget;
+
   /** @brief currently valid selected position in the inspector*/
   mitk::Point3D m_currentSelectedPosition;
   /** @brief indicates if the currently selected position is valid for the currently selected fit.
@@ -112,11 +116,7 @@ private:
   mitk::DataNode::Pointer m_spSelectedMovingNode;
   mitk::DataNode::Pointer m_spSelectedTargetNode;
 
-  bool m_autoTarget;
-  bool m_autoMoving;
-  bool m_activeEvaluation;
-
-  const std::string HelperNodeName;
+  static const std::string HelperNodeName;
 };
 
 #endif // MatchPoint_h

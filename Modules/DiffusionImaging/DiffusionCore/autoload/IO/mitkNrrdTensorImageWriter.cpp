@@ -46,7 +46,7 @@ void mitk::NrrdTensorImageWriter::Write()
   InputType::ConstPointer input = dynamic_cast<const InputType*>(this->GetInput());
   if (input.IsNull() )
   {
-    MITK_ERROR <<"Sorry, input to NrrdTensorImageWriter is NULL!";
+    MITK_ERROR <<"Sorry, input to NrrdTensorImageWriter is nullptr!";
     return;
   }
   if ( this->GetOutputLocation().empty() )
@@ -60,11 +60,10 @@ void mitk::NrrdTensorImageWriter::Write()
   io->SetFileType( itk::ImageIOBase::Binary );
   io->UseCompressionOn();
 
-  typedef itk::Image<itk::DiffusionTensor3D<float>,3> ImageType;
-  typedef itk::ImageFileWriter<ImageType> WriterType;
+  typedef itk::ImageFileWriter<TensorImage::ItkTensorImageType> WriterType;
   WriterType::Pointer nrrdWriter = WriterType::New();
 
-  ImageType::Pointer outimage = ImageType::New();
+  TensorImage::ItkTensorImageType::Pointer outimage = TensorImage::ItkTensorImageType::New();
   CastToItkImage(input, outimage);
 
   nrrdWriter->SetInput( outimage );

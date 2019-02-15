@@ -29,8 +29,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <usModuleRegistry.h>
 #include <usServiceProperties.h>
 #include <string>
-using namespace mitk;
-using namespace std;
 US_USE_NAMESPACE
 
 QmitkFreeSurferParcellationHandler::QmitkFreeSurferParcellationHandler() :
@@ -50,7 +48,6 @@ QmitkFreeSurferParcellationHandler::~QmitkFreeSurferParcellationHandler()
 void QmitkFreeSurferParcellationHandler::Notify(InteractionEvent *interactionEvent, bool isHandled)
 {
   Q_UNUSED( isHandled )
-  typedef itk::VectorContainer<unsigned int, mitk::DataNode::Pointer> SetOfObjects;
   BaseRenderer* sender = interactionEvent->GetSender();
   InteractionPositionEvent* positionEvent = static_cast<InteractionPositionEvent*>(interactionEvent);
   TNodePredicateDataType<Image>::Pointer isImageData = TNodePredicateDataType<Image>::New();
@@ -66,13 +63,18 @@ void QmitkFreeSurferParcellationHandler::Notify(InteractionEvent *interactionEve
         Image::Pointer image = dynamic_cast<Image*>( node->GetData() );
         if( image.IsNotNull() && image->GetGeometry()->IsInside(worldposition) )
         {
-          string typeStr = image->GetPixelType().GetComponentTypeAsString();
+          std::string typeStr = image->GetPixelType().GetComponentTypeAsString();
           int value = 0;
           try
           {
             if( typeStr == "int" )
             {
               ImagePixelReadAccessor<int, 3> readAccess( image );
+              value = static_cast<int>( readAccess.GetPixelByWorldCoordinates( worldposition ) );
+            }
+            else if( typeStr == "unsigned_int" )
+            {
+              ImagePixelReadAccessor<unsigned int, 3> readAccess( image );
               value = static_cast<int>( readAccess.GetPixelByWorldCoordinates( worldposition ) );
             }
             else if( typeStr == "unsigned_char" )
@@ -88,6 +90,16 @@ void QmitkFreeSurferParcellationHandler::Notify(InteractionEvent *interactionEve
             else if( typeStr == "float" )
             {
               ImagePixelReadAccessor<float, 3> readAccess( image );
+              value = static_cast<int>( readAccess.GetPixelByWorldCoordinates( worldposition ) );
+            }
+            else if( typeStr == "double" )
+            {
+              ImagePixelReadAccessor<double, 3> readAccess( image );
+              value = static_cast<int>( readAccess.GetPixelByWorldCoordinates( worldposition ) );
+            }
+            else if( typeStr == "unsigned_short" )
+            {
+              ImagePixelReadAccessor<unsigned short, 3> readAccess( image );
               value = static_cast<int>( readAccess.GetPixelByWorldCoordinates( worldposition ) );
             }
             else

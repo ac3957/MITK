@@ -16,7 +16,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkPluginActivator.h"
 
-#include "src/internal/QmitkDiffusionRegistrationView.h"
+#include "src/internal/QmitkHeadMotionCorrectionView.h"
+#include "src/internal/QmitkSimpleRegistrationView.h"
 
 
 ctkPluginContext* mitk::PluginActivator::m_Context = nullptr;
@@ -28,7 +29,8 @@ ctkPluginContext* mitk::PluginActivator::GetContext()
 
 void mitk::PluginActivator::start(ctkPluginContext* context)
 {
-  BERRY_REGISTER_EXTENSION_CLASS(QmitkDiffusionRegistrationView, context)
+  BERRY_REGISTER_EXTENSION_CLASS(QmitkHeadMotionCorrectionView, context)
+  BERRY_REGISTER_EXTENSION_CLASS(QmitkSimpleRegistrationView, context)
   m_Context = context;
 }
 

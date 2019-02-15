@@ -60,16 +60,14 @@ public:
 
   itkSetMacro( BinaryOutput, bool)
 
-  void GenerateData();
+  void GenerateData() override;
 
 protected:
-
-  itk::Point<float, 3> GetItkPoint(double point[3]);
 
   TractsToFiberEndingsImageFilter();
   virtual ~TractsToFiberEndingsImageFilter();
 
-  mitk::FiberBundle::Pointer       m_FiberBundle;          ///< input fiber bundle
+  mitk::FiberBundle::Pointer        m_FiberBundle;          ///< input fiber bundle
   float                             m_UpsamplingFactor;     ///< use higher resolution for ouput image
   bool                              m_InvertImage;          ///< voxelvalue = 1-voxelvalue
   bool                              m_UseImageGeometry;     ///< output image is given other geometry than fiberbundle (input image geometry)

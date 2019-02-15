@@ -29,8 +29,22 @@ namespace mitk
   (0x0029, 0x1020) to extract relevant CEST data.
 
   An initial parsing determines whether the provided string belongs to CEST data at all.
-  If the "tSequenceFileName" is of the format "{WHATEVER}CEST_Rev####" it is assumed that the
-  data is indeed CEST data and was taken with revision #### (not limited to four digits).
+  To make the check and extract the revision number the following rules are aplied: \n
+  <ol>
+    <li>Sequence name (tSequenceFileName) must either
+      <ol>
+        <li>start with the substring "CEST" (case insensitiv), or</li>
+        <li>contain the substring "_CEST" (case insensitiv).</li>
+      </ol>
+    </li>
+    <li>Sequence name (tSequenceFileName) must contain the substring "_Rev" (case insensitiv).</li>
+    <li>All numbers after "_Rev" represent the revision number; until either
+      <ol>
+        <li>the next _, or</li>
+        <li>end of sequence name.</li>
+      </ol>
+    </li>
+  </ol>
 
   Which custom parameters to save and to which property name can be controlled by a json file.
   This file can be either provided as a resource for the MitkCEST module during compilation or
@@ -68,6 +82,15 @@ namespace mitk
     /// parse the provided string and return a property list based on the closest revision parameter mapping
     mitk::PropertyList::Pointer ParseDicomPropertyString(std::string dicomPropertyString);
 
+    /** Extract the revision out of the passed sequenceFileName. If the file name is not a valid CEST file name
+      (see rules in the class documentation) exceptions will be thrown. If the file name is valid but contains no
+      revision number an empty string will be returned.
+    */
+    static std::string ExtractRevision(std::string sequenceFileName);
+
+    void SetParseStrategy(std::string parseStrategy);
+    void SetRevisionMappingStrategy(std::string revisionMappingStrategy);
+
     /// name of the property for the offsets, including normalization offsets
     static const std::string m_OffsetsPropertyName;
 
@@ -84,6 +107,9 @@ namespace mitk
     std::string GetRevisionAppropriateJSONString(std::string revisionString);
     void GetClosestLowerRevision(std::string revisionString);
     std::string GetClosestLowerRevision(std::string revisionString, std::vector<int> availableRevisionsVector);
+    
+    /// Decides whether or not the image is likely to be a T1Map, if not it is assumed to be a CEST sequence
+    bool IsT1Sequence(std::string preparationType, std::string recoveryMode, std::string spoilingType, std::string revisionString);
 
     /// Get a string filled with the properly formated offsets based on the sampling type and offset
     std::string GetOffsetString(std::string samplingType, std::string offset, std::string measurements);
@@ -92,6 +118,9 @@ namespace mitk
     std::vector<int> GetExternalRevisions();
     /// returns a vector revision numbers of all REVISIONNUMBER.json provided as resources during the compile
     std::vector<int> GetInternalRevisions();
+
+    /// returns the path where external jsons are expected to be located
+    std::string GetExternalJSONDirectory();
 
     /// the closest lower revision provided as resource, empty if none found
     std::string m_ClosestInternalRevision;
@@ -104,7 +133,19 @@ namespace mitk
     static const std::string m_DefaultJsonString;
     /// path to the dicom data
     std::string m_DicomDataPath;
+    /// Should the kind of data be automatically determined or should it be parsed as a specific one
+    std::string m_ParseStrategy;
+    /// How to handle parameter mapping based on absent revision jsons
+    std::string m_RevisionMappingStrategy;
   };
+
+  const std::string MITKCEST_EXPORT CEST_PROPERTY_NAME_TOTALSCANTIME();
+  const std::string MITKCEST_EXPORT CEST_PROPERTY_NAME_PREPERATIONTYPE();
+  const std::string MITKCEST_EXPORT CEST_PROPERTY_NAME_RECOVERYMODE();
+  const std::string MITKCEST_EXPORT CEST_PROPERTY_NAME_SPOILINGTYPE();
+  const std::string MITKCEST_EXPORT CEST_PROPERTY_NAME_OFFSETS();
+  const std::string MITKCEST_EXPORT CEST_PROPERTY_NAME_TREC();
+
 }
 
 #endif // MITKCUSTOMTAGPARSER_H

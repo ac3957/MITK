@@ -32,19 +32,41 @@ set(_plugins
   org.mitk.gui.qt.diffusionimagingapp
   org.mitk.gui.qt.common
   org.mitk.gui.qt.stdmultiwidgeteditor
-  org.mitk.gui.qt.common.legacy
   org.mitk.gui.qt.datamanager
   org.mitk.gui.qt.measurementtoolbox
   org.mitk.gui.qt.segmentation
+  org.mitk.gui_qt.multilabelsegmentation
+  org.mitk.gui.qt.python
   org.mitk.gui.qt.volumevisualization
   org.mitk.gui.qt.diffusionimaging
+  org.mitk.gui.qt.diffusionimaging.connectomics
+  org.mitk.gui.qt.diffusionimaging.fiberfox
+  org.mitk.gui.qt.diffusionimaging.fiberprocessing
+  org.mitk.gui.qt.diffusionimaging.ivim
+  org.mitk.gui.qt.diffusionimaging.odfpeaks
+  org.mitk.gui.qt.diffusionimaging.preprocessing
+  org.mitk.gui.qt.diffusionimaging.reconstruction
+  org.mitk.gui.qt.diffusionimaging.tractography
+  org.mitk.gui.qt.diffusionimaging.registration
+  org.mitk.gui.qt.diffusionimaging.python
+  org.mitk.gui.qt.diffusionimaging.denoising
+  org.mitk.gui.qt.diffusionimaging.partialvolume
+  org.mitk.gui.qt.matchpoint.algorithm.browser
+  org.mitk.gui.qt.matchpoint.algorithm.control
+  org.mitk.gui.qt.matchpoint.mapper
   org.mitk.gui.qt.imagenavigator
   org.mitk.gui.qt.moviemaker
   org.mitk.gui.qt.basicimageprocessing
   org.mitk.gui.qt.properties
   org.mitk.gui.qt.viewnavigator
-  org.mitk.gui.qt.cmdlinemodules
 )
+
+if(NOT MITK_USE_Python)
+  list(REMOVE_ITEM _plugins org.mitk.gui.qt.diffusionimaging.python)
+  list(REMOVE_ITEM _plugins org.mitk.gui.qt.python)
+endif()
+
+
 
 # Plug-ins listed below will not be
 #  - added as a build-time dependency to the executable
@@ -84,3 +106,4 @@ endif()
 if(MITK_MODULES_ENABLED_PLUGINS)
   add_dependencies(${DIFFUSIONAPP_NAME} ${MITK_MODULES_ENABLED_PLUGINS})
 endif()
+

@@ -23,7 +23,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "ui_QmitkGibbsTrackingViewControls.h"
 
-#include <mitkQBallImage.h>
+#include <mitkOdfImage.h>
 #include <QThread>
 #include <mitkFiberBundle.h>
 #include <QTime>
@@ -71,11 +71,11 @@ class QmitkGibbsTrackingView : public QmitkAbstractView
 
 public:
 
-  typedef itk::Image<float,3>                               ItkFloatImageType;
-  typedef itk::Vector<float, QBALL_ODFSIZE>                 OdfVectorType;
-  typedef itk::Image<OdfVectorType, 3>                      ItkQBallImgType;
-  typedef itk::Image< itk::DiffusionTensor3D<float>, 3 >    ItkTensorImage;
-  typedef itk::GibbsTrackingFilter< ItkQBallImgType >       GibbsTrackingFilterType;
+  typedef itk::Image<float,3>                             ItkFloatImageType;
+  typedef itk::Vector<float, ODF_SAMPLING_SIZE>           OdfVectorType;
+  typedef mitk::OdfImage::ItkOdfImageType                 ItkOdfImgType;
+  typedef mitk::TensorImage::ItkTensorImageType           ItkTensorImage;
+  typedef itk::GibbsTrackingFilter< ItkOdfImgType >       GibbsTrackingFilterType;
 
   static const std::string VIEW_ID;
 
@@ -98,7 +98,6 @@ protected slots:
   void AfterThread();                       ///< update gui etc. after tracking has finished
   void BeforeThread();                      ///< start timer etc.
   void TimerUpdate();
-  void SetMask();
   void AdvancedSettings();                  ///< show/hide advanced tracking options
   void SaveTrackingParameters();            ///< save tracking parameters to xml file
   void LoadTrackingParameters();            ///< load tracking parameters from xml file
@@ -114,12 +113,12 @@ protected slots:
   void SetCurvatureThreshold(int value);
   void SetRandomSeed(int value);
   void SetOutputFile();
+  void UpdateGUI();             ///< update button activity etc. dpending on current datamanager selection
 
 private:
 
   // Visualization & GUI
   void GenerateFiberBundle();   ///< generate fiber bundle from tracking output and add to datanode
-  void UpdateGUI();             ///< update button activity etc. dpending on current datamanager selection
   void UpdateTrackingStatus();  ///< update textual status display of the tracking process
 
   /// \brief called by QmitkAbstractView when DataManager's selection has changed
@@ -137,8 +136,8 @@ private:
   mitk::FiberBundle::Pointer    m_FiberBundle;      ///< tracking output
   ItkFloatImageType::Pointer    m_MaskImage;        ///< used to reduce the algorithms search space. tracking only inside of the mask.
   mitk::TensorImage::Pointer    m_TensorImage;      ///< actual image that is tracked
-  mitk::QBallImage::Pointer     m_QBallImage;       ///< actual image that is tracked
-  ItkQBallImgType::Pointer      m_ItkQBallImage;    ///< actual image that is tracked
+  mitk::OdfImage::Pointer     m_OdfImage;       ///< actual image that is tracked
+  ItkOdfImgType::Pointer      m_ItkOdfImage;    ///< actual image that is tracked
   ItkTensorImage::Pointer       m_ItkTensorImage;   ///< actual image that is tracked
 
   /** data nodes */

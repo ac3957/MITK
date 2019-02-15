@@ -30,7 +30,16 @@ namespace itk
   */
   template <class TInputImage, class TOutputImage>
   ConnectedAdaptiveThresholdImageFilter<TInputImage, TOutputImage>::ConnectedAdaptiveThresholdImageFilter()
-    : m_FineDetectionMode(false)
+    : m_OutoutImageMaskFineSegmentation(nullptr),
+      m_GrowingDirectionIsUpwards(true),
+      m_SeedpointValue(0),
+      m_DetectedLeakagePoint(0),
+      m_InitValue(0),
+      m_AdjLowerTh(0),
+      m_AdjUpperTh(0),
+      m_FineDetectionMode(false),
+      m_DiscardLastPreview(false),
+      m_SegmentationCancelled(false)
   {
   }
 
@@ -44,12 +53,12 @@ namespace itk
     typename Superclass::InputPixelObjectType::Pointer upperThreshold = this->GetUpperInput();
 
     // kommt drauf, wie wir hier die Pipeline aufbauen
-    Superclass::m_Lower = lowerThreshold->Get();
-    Superclass::m_Upper = upperThreshold->Get();
+    this->SetLower(lowerThreshold->Get());
+    this->SetUpper(upperThreshold->Get());
     typedef BinaryThresholdImageFunction<InputImageType> FunctionType;
     typedef AdaptiveThresholdIterator<OutputImageType, FunctionType> IteratorType;
 
-    int initValue = IteratorType::CalculateInitializeValue((int)Superclass::m_Lower, (int)Superclass::m_Upper);
+    int initValue = IteratorType::CalculateInitializeValue((int)(this->GetLower()), (int)(this->GetUpper()));
 
     // Initialize the output according to the segmentation (fine or raw)
     if (m_FineDetectionMode)
@@ -68,16 +77,19 @@ namespace itk
     typename FunctionType::Pointer function = FunctionType::New();
     function->SetInputImage(inputImage);
 
+    typename Superclass::SeedContainerType seeds;
+    seeds = this->GetSeeds();
+
     // pass parameters needed for region growing to iterator
-    IteratorType it(outputImage, function, this->m_Seeds);
+    IteratorType it(outputImage, function, seeds);
     it.SetFineDetectionMode(m_FineDetectionMode);
     it.SetExpansionDirection(m_GrowingDirectionIsUpwards);
-    it.SetMinTH((int)Superclass::m_Lower);
-    it.SetMaxTH((int)Superclass::m_Upper);
+    it.SetMinTH((int)(this->GetLower()));
+    it.SetMaxTH((int)(this->GetUpper()));
     it.GoToBegin();
     this->m_SeedpointValue = it.GetSeedPointValue();
 
-    if (Superclass::m_Lower > this->m_SeedpointValue || this->m_SeedpointValue > Superclass::m_Upper)
+    if ((this->GetLower()) > this->m_SeedpointValue || this->m_SeedpointValue > (this->GetUpper()))
     {
       // set m_SegmentationCancelled to true, so if it doesn't reach the point where it is set back to false
       // we can asssume that there was an error

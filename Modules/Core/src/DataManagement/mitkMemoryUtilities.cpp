@@ -16,8 +16,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "mitkMemoryUtilities.h"
 
-#include <stdio.h>
-#if _MSC_VER || __MINGW32__
+#include <cstdio>
+#if _MSC_VER
 #include <windows.h>
 #include <psapi.h>
 #elif defined(__APPLE__)
@@ -39,12 +39,12 @@ See LICENSE.txt or http://www.mitk.org for details.
  */
 size_t mitk::MemoryUtilities::GetProcessMemoryUsage()
 {
-#if _MSC_VER || __MINGW32__
+#if _MSC_VER
   size_t size = 0;
   DWORD pid = GetCurrentProcessId();
   PROCESS_MEMORY_COUNTERS pmc;
   HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
-  if (hProcess == NULL)
+  if (hProcess == nullptr)
     return 0;
   if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc)))
   {
@@ -73,7 +73,7 @@ size_t mitk::MemoryUtilities::GetProcessMemoryUsage()
  */
 size_t mitk::MemoryUtilities::GetTotalSizeOfPhysicalRam()
 {
-#if _MSC_VER || __MINGW32__
+#if _MSC_VER
   MEMORYSTATUSEX statex;
   statex.dwLength = sizeof(statex);
   GlobalMemoryStatusEx(&statex);
@@ -84,7 +84,7 @@ size_t mitk::MemoryUtilities::GetTotalSizeOfPhysicalRam()
   mib[0] = CTL_HW;
   mib[1] = HW_MEMSIZE;
   size_t length = sizeof(int64_t);
-  sysctl(mib, 2, &physical_memory, &length, NULL, 0);
+  sysctl(mib, 2, &physical_memory, &length, nullptr, 0);
   return physical_memory;
 #else
   struct sysinfo info;

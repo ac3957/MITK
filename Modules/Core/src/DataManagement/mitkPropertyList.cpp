@@ -20,6 +20,35 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkProperties.h"
 #include "mitkStringProperty.h"
 
+mitk::BaseProperty::ConstPointer mitk::PropertyList::GetConstProperty(const std::string &propertyKey, const std::string &/*contextName*/, bool /*fallBackOnDefaultContext*/) const
+{
+  PropertyMap::const_iterator it;
+
+  it = m_Properties.find(propertyKey);
+  if (it != m_Properties.cend())
+    return it->second.GetPointer();
+  else
+    return nullptr;
+};
+
+std::vector<std::string> mitk::PropertyList::GetPropertyKeys(const std::string &contextName, bool includeDefaultContext) const
+{
+  std::vector<std::string> propertyKeys;
+
+  if (contextName.empty() || includeDefaultContext)
+  {
+    for (auto property : this->m_Properties)
+      propertyKeys.push_back(property.first);
+  }
+
+  return propertyKeys;
+};
+
+std::vector<std::string> mitk::PropertyList::GetPropertyContextNames() const
+{
+  return std::vector<std::string>();
+};
+
 mitk::BaseProperty *mitk::PropertyList::GetProperty(const std::string &propertyKey) const
 {
   PropertyMap::const_iterator it;
@@ -31,8 +60,16 @@ mitk::BaseProperty *mitk::PropertyList::GetProperty(const std::string &propertyK
     return nullptr;
 }
 
-void mitk::PropertyList::SetProperty(const std::string &propertyKey, BaseProperty *property)
+mitk::BaseProperty * mitk::PropertyList::GetNonConstProperty(const std::string &propertyKey, const std::string &/*contextName*/, bool /*fallBackOnDefaultContext*/)
 {
+  return this->GetProperty(propertyKey);
+}
+
+void mitk::PropertyList::SetProperty(const std::string &propertyKey, BaseProperty *property, const std::string &/*contextName*/, bool /*fallBackOnDefaultContext*/)
+{
+  if (propertyKey.empty())
+    mitkThrow() << "Property key is empty.";
+
   if (!property)
     return;
   // make sure that BaseProperty*, which may have just been created and never been
@@ -62,9 +99,9 @@ void mitk::PropertyList::SetProperty(const std::string &propertyKey, BasePropert
     else
     {
       MITK_ERROR << "In " __FILE__ ", l." << __LINE__ << ": Trying to set existing property " << it->first
-                 << " of type " << it->second->GetNameOfClass() << " to a property with different type "
-                 << property->GetNameOfClass() << "."
-                 << " Use ReplaceProperty() instead." << std::endl;
+        << " of type " << it->second->GetNameOfClass() << " to a property with different type "
+        << property->GetNameOfClass() << "."
+        << " Use ReplaceProperty() instead." << std::endl;
     }
     return;
   }
@@ -93,6 +130,19 @@ void mitk::PropertyList::ReplaceProperty(const std::string &propertyKey, BasePro
   Modified();
 }
 
+void mitk::PropertyList::RemoveProperty(const std::string &propertyKey, const std::string &/*contextName*/, bool /*fallBackOnDefaultContext*/)
+{
+  auto it(m_Properties.find(propertyKey));
+
+  // Is a property with key @a propertyKey contained in the list?
+  if (it != m_Properties.cend())
+  {
+    it->second = nullptr;
+    m_Properties.erase(it);
+    Modified();
+  }
+}
+
 mitk::PropertyList::PropertyList()
 {
 }
@@ -119,7 +169,7 @@ unsigned long mitk::PropertyList::GetMTime() const
   {
     if (it->second.IsNull())
     {
-      itkWarningMacro(<< "Property '" << it->first << "' contains nothing (NULL).");
+      itkWarningMacro(<< "Property '" << it->first << "' contains nothing (nullptr).");
       continue;
     }
     if (Superclass::GetMTime() < it->second->GetMTime())
@@ -134,7 +184,7 @@ unsigned long mitk::PropertyList::GetMTime() const
 
 bool mitk::PropertyList::DeleteProperty(const std::string &propertyKey)
 {
-  PropertyMap::iterator it = m_Properties.find(propertyKey);
+  auto it = m_Properties.find(propertyKey);
 
   if (it != m_Properties.end())
   {

@@ -24,13 +24,10 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "ui_QmitkQBallReconstructionViewControls.h"
 
-#include <berryIPartListener.h>
-#include <berryISelectionListener.h>
-#include <berryIStructuredSelection.h>
-
 #include <mitkImage.h>
 #include <mitkDiffusionPropertyHelper.h>
 #include <itkVectorImage.h>
+#include <mitkShImage.h>
 
 typedef short DiffusionPixelType;
 
@@ -93,21 +90,22 @@ class QmitkQBallReconstructionView : public QmitkAbstractView, public mitk::ILif
 
 protected slots:
 
+  void UpdateGui();
   void ReconstructStandard();
-  void AdvancedCheckboxClicked();
+  void ConvertShImage();
   void MethodChoosen(int method);
   void Reconstruct(int method, int normalization);
 
-  void NumericalQBallReconstruction(mitk::DataStorage::SetOfObjects::Pointer inImages, int normalization);
-  void AnalyticalQBallReconstruction(mitk::DataStorage::SetOfObjects::Pointer inImages, int normalization);
-  void MultiQBallReconstruction(mitk::DataStorage::SetOfObjects::Pointer inImages);
+  void NumericalQBallReconstruction(mitk::DataNode::Pointer node, int normalization);
+  void AnalyticalQBallReconstruction(mitk::DataNode::Pointer node, int normalization);
+  void MultiQBallReconstruction(mitk::DataNode::Pointer node);
 
 
   /**
    * @brief PreviewThreshold Generates a preview of the values that are cut off by the thresholds
    * @param threshold
    */
-  void PreviewThreshold(int threshold);
+  void PreviewThreshold(short threshold);
 
 protected:
 
@@ -117,24 +115,15 @@ protected:
   Ui::QmitkQBallReconstructionViewControls* m_Controls;
 
   template<int L>
-  void TemplatedAnalyticalQBallReconstruction(mitk::DataNode* dataNodePointer, float lambda, int normalization);
+  void TemplatedAnalyticalQBallReconstruction(mitk::DataNode* dataNodePointer, double lambda, int normalization);
 
   template<int L>
-  void TemplatedMultiQBallReconstruction(float lambda, mitk::DataNode*);
-
-  void SetDefaultNodeProperties(mitk::DataNode::Pointer node, std::string name);
-
-  //void Create
-
-  QScopedPointer<berry::ISelectionListener> m_SelListener;
-  berry::IStructuredSelection::ConstPointer m_CurrentSelection;
-
-  mitk::DataStorage::SetOfObjects::Pointer m_DiffusionImages;
+  void TemplatedMultiQBallReconstruction(double lambda, mitk::DataNode*);
 
 private:
 
   std::map< const mitk::DataNode *, QbrShellSelection * > m_ShellSelectorMap;
-  void GenerateShellSelectionUI(mitk::DataStorage::SetOfObjects::Pointer set);
+  void GenerateShellSelectionUI(mitk::DataNode::Pointer node);
 };
 
 

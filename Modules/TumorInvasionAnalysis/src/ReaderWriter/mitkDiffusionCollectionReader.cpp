@@ -13,7 +13,9 @@
  See LICENSE.txt or http://www.mitk.org for details.
 
  ===================================================================*/
-#pragma warning (disable : 4996)
+#ifdef _MSC_VER
+#  pragma warning (disable : 4996)
+#endif
 
 #include "mitkDiffusionCollectionReader.h"
 #include <vtkXMLDataElement.h>
@@ -54,9 +56,9 @@ static std::string GetDate(std::string fileName,std::string suffix)
 
 
 mitk::DiffusionCollectionReader::DiffusionCollectionReader()
- : m_Collection(NULL),
-   m_SubCollection(NULL),
-   m_DataItemCollection(NULL),
+ : m_Collection(nullptr),
+   m_SubCollection(nullptr),
+   m_DataItemCollection(nullptr),
    m_ColIgnore(false), m_ItemIgnore(false)
 {
 }
@@ -108,9 +110,9 @@ void mitk::DiffusionCollectionReader::ClearSubColIds()
 
 void mitk::DiffusionCollectionReader::Clear()
 {
-  m_DataItemCollection = NULL;
-  m_SubCollection = NULL;
-  m_Collection = NULL;
+  m_DataItemCollection = nullptr;
+  m_SubCollection = nullptr;
+  m_Collection = nullptr;
 }
 
 mitk::DataCollection::Pointer mitk::DiffusionCollectionReader::FolderToCollection(std::string folder, std::vector<std::string> suffixes,std::vector<std::string> seriesNames,  bool allowGaps)
@@ -120,7 +122,7 @@ mitk::DataCollection::Pointer mitk::DiffusionCollectionReader::FolderToCollectio
   FileListType fileList = SanitizeFileList(GenerateFileLists(folder, suffixes, allowGaps));
 
   if (fileList.size() <= 0)
-    return NULL;
+    return nullptr;
 
   DataCollection::Pointer collection = DataCollection::New();
   collection->SetName(GetName(fileList.at(0).at(0),suffixes.at(0)));
@@ -133,7 +135,7 @@ mitk::DataCollection::Pointer mitk::DiffusionCollectionReader::FolderToCollectio
       std::string fileName = fileList.at(i).at(k);
       if (fileName.find(".fib") >= fileName.length())
       {
-        Image::Pointer image = IOUtil::LoadImage(fileList.at(i).at(k));
+        auto image = IOUtil::Load<Image>(fileList.at(i).at(k));
         subCollection->AddData(image.GetPointer(),seriesNames.at(i), fileList.at(i).at(k));
       }
       else
@@ -209,7 +211,7 @@ void mitk::DiffusionCollectionReader::StartElement(const char* elementName, cons
     // Populate Sub-Collection
     if (itemLink.find(".fib") >= itemLink.length())
     {
-      Image::Pointer image = IOUtil::LoadImage(itemLink);
+      auto image = IOUtil::Load<Image>(itemLink);
       if (image.IsNotNull())
         m_DataItemCollection->AddData(image.GetPointer(),itemName,relativeItemLink);
       else

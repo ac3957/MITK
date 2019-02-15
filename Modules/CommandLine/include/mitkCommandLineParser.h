@@ -40,6 +40,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <usAny.h>
 
 #include <MitkCommandLineExports.h>
+#include <mitkVersion.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -239,6 +240,13 @@ public:
                              const std::string &argLabel,
                              const std::string &argHelp);
 
+
+  /**
+  * Returns the vector of current Command line Parameter
+  *
+  */
+  std::vector < std::map<std::string, us::Any> > getArgumentList();
+
   /**
  * Sets a custom regular expression for validating argument parameters. The method
  * <code>errorString()</code> can be used the get the last error description.
@@ -378,5 +386,7 @@ private:
   std::string ParameterGroupName;
   std::string ParameterGroupDescription;
 };
+
+
 
 #endif

@@ -495,11 +495,6 @@ void mitk::ConnectomicsNetworkMapper3D::SetDefaultProperties(DataNode *node, Bas
   Superclass::SetDefaultProperties(node, renderer, overwrite);
 }
 
-void mitk::ConnectomicsNetworkMapper3D::SetVtkMapperImmediateModeRendering(vtkMapper *mapper)
-{
-  mapper->ImmediateModeRenderingOn();
-}
-
 void mitk::ConnectomicsNetworkMapper3D::UpdateVtkObjects()
 {
   // TODO: implement
@@ -714,7 +709,7 @@ double mitk::ConnectomicsNetworkMapper3D::FillEdgeParameterVector(std::vector<do
       vectorOfEdges = this->GetInput()->GetVectorOfAllEdges();
     for (int index(0); index < end; index++)
     {
-      parameterVector->at(index) = vectorOfEdges[index].second.weight;
+      parameterVector->at(index) = vectorOfEdges[index].second.fiber_count;
     }
     maximum = *std::max_element(parameterVector->begin(), parameterVector->end());
   }
@@ -806,7 +801,7 @@ void mitk::ConnectomicsNetworkMapper3D::FillEdgeFilterBoolVector(std::vector<boo
 
     for (int index(0); index < end; index++)
     {
-      parameterVector.at(index) = vectorOfEdges[index].second.weight;
+      parameterVector.at(index) = vectorOfEdges[index].second.fiber_count;
     }
   }
 

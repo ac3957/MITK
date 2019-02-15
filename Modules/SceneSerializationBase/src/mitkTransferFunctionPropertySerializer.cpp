@@ -15,7 +15,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 ===================================================================*/
 
 #include "mitkTransferFunctionPropertySerializer.h"
-#include <boost/lexical_cast.hpp>
+#include <mitkLexicalCast.h>
 #include <mitkLocaleSwitch.h>
 
 namespace mitk
@@ -24,7 +24,7 @@ namespace mitk
   mitk::TransferFunctionPropertySerializer::~TransferFunctionPropertySerializer() {}
   TiXmlElement *mitk::TransferFunctionPropertySerializer::Serialize()
   {
-    if (const TransferFunctionProperty *prop =
+    if (const auto *prop =
           dynamic_cast<const TransferFunctionProperty *>(mitk::BasePropertySerializer::m_Property.GetPointer()))
     {
       LocaleSwitch localeSwitch("C");

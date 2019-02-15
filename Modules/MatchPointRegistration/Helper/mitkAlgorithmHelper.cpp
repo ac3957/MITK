@@ -33,11 +33,37 @@ See LICENSE.txt or http://www.mitk.org for details.
 namespace mitk
 {
 
-  MITKAlgorithmHelper::MITKAlgorithmHelper(map::algorithm::RegistrationAlgorithmBase* algorithm) :
-    m_AlgorithmBase(algorithm)
+  MITKAlgorithmHelper::MITKAlgorithmHelper(map::algorithm::RegistrationAlgorithmBase *algorithm)
+    : m_AlgorithmBase(algorithm), m_Error(CheckError::none)
   {
     m_AllowImageCasting = true;
   }
+
+  bool MITKAlgorithmHelper::HasImageAlgorithmInterface(const map::algorithm::RegistrationAlgorithmBase* algorithm)
+  {
+    using InternalDefault2DImageType = itk::Image<map::core::discrete::InternalPixelType, 2>;
+    using InternalDefault3DImageType = itk::Image<map::core::discrete::InternalPixelType, 3>;
+
+    using Alg2DType = const ::map::algorithm::facet::ImageRegistrationAlgorithmInterface<InternalDefault2DImageType, InternalDefault2DImageType>; 
+    if (dynamic_cast<Alg2DType*>(algorithm) != nullptr) return true;
+    using Alg3DType = const ::map::algorithm::facet::ImageRegistrationAlgorithmInterface<InternalDefault3DImageType, InternalDefault3DImageType>;
+    if (dynamic_cast<Alg3DType*>(algorithm) != nullptr) return true;
+    using Alg2D3DType = const ::map::algorithm::facet::ImageRegistrationAlgorithmInterface<InternalDefault2DImageType, InternalDefault3DImageType>;
+    if (dynamic_cast<Alg2D3DType*>(algorithm) != nullptr) return true;
+    using Alg3D2DType = const ::map::algorithm::facet::ImageRegistrationAlgorithmInterface<InternalDefault3DImageType, InternalDefault2DImageType>;
+    if (dynamic_cast<Alg3D2DType*>(algorithm) != nullptr) return true;
+
+    return false;
+  };
+
+  bool MITKAlgorithmHelper::HasPointSetAlgorithmInterface(const map::algorithm::RegistrationAlgorithmBase* algorithm)
+  {
+    typedef ::map::core::continuous::Elements<3>::InternalPointSetType InternalDefaultPointSetType;
+    typedef const ::map::algorithm::facet::PointSetRegistrationAlgorithmInterface<InternalDefaultPointSetType, InternalDefaultPointSetType>
+      PointSetRegInterface;
+
+    return dynamic_cast<PointSetRegInterface*>(algorithm) != nullptr;
+  };
 
   map::core::RegistrationBase::Pointer
   MITKAlgorithmHelper::
@@ -113,12 +139,12 @@ namespace mitk
 
     if (! moving)
     {
-      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Moving data pointer is NULL.");
+      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Moving data pointer is nullptr.");
     }
 
     if (! target)
     {
-      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Target data pointer is NULL.");
+      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Target data pointer is nullptr.");
     }
 
     bool result = false;
@@ -198,12 +224,12 @@ namespace mitk
 
     if (! moving)
     {
-      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Moving data pointer is NULL.");
+      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Moving data pointer is nullptr.");
     }
 
     if (! target)
     {
-      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Target data pointer is NULL.");
+      mapDefaultExceptionStaticMacro( << "Error, cannot check data. Target data pointer is nullptr.");
     }
 
     unsigned int movingDim = m_AlgorithmBase->getMovingDimensions();
@@ -328,8 +354,8 @@ namespace mitk
 
   template<typename TPixelType1, unsigned int VImageDimension1,
            typename TPixelType2, unsigned int VImageDimension2>
-  void MITKAlgorithmHelper::DoCheckImages(const itk::Image<TPixelType1, VImageDimension1>* moving,
-                                          const itk::Image<TPixelType2, VImageDimension2>* target) const
+  void MITKAlgorithmHelper::DoCheckImages(const itk::Image<TPixelType1, VImageDimension1>* /*moving*/,
+                                          const itk::Image<TPixelType2, VImageDimension2>* /*target*/) const
   {
     typedef itk::Image<TPixelType1, VImageDimension1> MovingImageType;
     typedef itk::Image<TPixelType2, VImageDimension2> TargetImageType;

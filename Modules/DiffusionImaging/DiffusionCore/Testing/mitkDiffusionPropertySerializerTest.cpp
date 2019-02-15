@@ -72,8 +72,7 @@ public:
 
     map[1000] = indices2;
     bvaluemap_prop = mitk::BValueMapProperty::New(map).GetPointer();
-    propList->SetProperty(mitk::DiffusionPropertyHelper::BVALUEMAPPROPERTYNAME.c_str(),bvaluemap_prop);
-
+    propList->SetProperty(mitk::DiffusionPropertyHelper::GetBvaluePropertyName().c_str(), bvaluemap_prop);
 
     mitk::GradientDirectionsProperty::GradientDirectionsContainerType::Pointer gdc;
     gdc = mitk::GradientDirectionsProperty::GradientDirectionsContainerType::New();
@@ -95,7 +94,7 @@ public:
 
 
     gradientdirection_prop = mitk::GradientDirectionsProperty::New(gdc.GetPointer()).GetPointer();
-    propList->SetProperty(mitk::DiffusionPropertyHelper::GRADIENTCONTAINERPROPERTYNAME.c_str(), gradientdirection_prop);
+    propList->ReplaceProperty(mitk::DiffusionPropertyHelper::GetGradientContainerPropertyName().c_str(), gradientdirection_prop);
 
     mitk::MeasurementFrameProperty::MeasurementFrameType mft;
 
@@ -108,7 +107,7 @@ public:
     mft.set_row(2,row2);
 
     measurementframe_prop = mitk::MeasurementFrameProperty::New(mft).GetPointer();
-    propList->SetProperty(mitk::DiffusionPropertyHelper::MEASUREMENTFRAMEPROPERTYNAME.c_str(), measurementframe_prop);
+    propList->ReplaceProperty(mitk::DiffusionPropertyHelper::GetGradientContainerPropertyName().c_str(), measurementframe_prop);
   }
 
   void tearDown() override
@@ -139,11 +138,11 @@ public:
         MITK_TEST_OUTPUT (<< "Warning: " << allSerializers.size() << " serializers found for " << prop->GetNameOfClass() << "testing only the first one.");
       }
       mitk::BasePropertySerializer* serializer = dynamic_cast<mitk::BasePropertySerializer*>( allSerializers.begin()->GetPointer());
-      MITK_TEST_CONDITION(serializer != NULL, serializername + std::string(" is valid"));
-      if (serializer != NULL)
+      MITK_TEST_CONDITION(serializer != nullptr, serializername + std::string(" is valid"));
+      if (serializer != nullptr)
       {
         serializer->SetProperty(prop);
-        TiXmlElement* valueelement = NULL;
+        TiXmlElement* valueelement = nullptr;
         try
         {
           valueelement = serializer->Serialize();
@@ -154,9 +153,9 @@ public:
         catch (...)
         {
         }
-        MITK_TEST_CONDITION(valueelement != NULL, std::string("Serialize property with ") + serializername);
+        MITK_TEST_CONDITION(valueelement != nullptr, std::string("Serialize property with ") + serializername);
 
-        if (valueelement == NULL)
+        if (valueelement == nullptr)
         {
           MITK_TEST_OUTPUT( << "serialization failed, skipping deserialization");
           continue;

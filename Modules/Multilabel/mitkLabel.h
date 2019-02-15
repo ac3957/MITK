@@ -71,12 +71,12 @@ namespace mitk
     void SetLayer(unsigned int layer);
     unsigned int GetLayer() const;
 
-    void SetProperty(const std::string &propertyKey, BaseProperty *property);
+    void SetProperty(const std::string &propertyKey, BaseProperty *property, const std::string &contextName = "", bool fallBackOnDefaultContext = false) override;
 
     using itk::Object::Modified;
     void Modified() { Superclass::Modified(); }
     Label();
-    virtual ~Label();
+    ~Label() override;
 
   protected:
     void PrintSelf(std::ostream &os, itk::Indent indent) const override;
@@ -84,7 +84,7 @@ namespace mitk
     Label(const Label &other);
 
   private:
-    virtual itk::LightObject::Pointer InternalClone() const override;
+    itk::LightObject::Pointer InternalClone() const override;
   };
 
   /**

@@ -91,7 +91,7 @@ QModelIndexList QmitkXnatTreeModel::match(
               result.append(idx);
             break;
           case Qt::MatchFixedString:
-            if (!t.compare(text, cs) == 0)
+            if (t.compare(text, cs) != 0)
               result.append(idx);
             break;
           case Qt::MatchContains:
@@ -122,7 +122,7 @@ void QmitkXnatTreeModel::fetchMore(const QModelIndex &index)
   {
     ctkXnatTreeModel::fetchMore(index);
   }
-  catch (ctkRuntimeException e)
+  catch (const ctkRuntimeException& e)
   {
     QmitkHttpStatusCodeHandler::HandleErrorMessage(e.what());
     emit Error(index);

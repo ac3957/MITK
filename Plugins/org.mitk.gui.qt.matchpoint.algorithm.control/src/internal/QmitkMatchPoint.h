@@ -72,9 +72,9 @@ protected slots:
   virtual void CreateConnections();
 
   /// \brief Called when the user clicks the GUI button
-  void OnMaskCheckBoxToggeled(bool checked);
   void OnLoadAlgorithmButtonPushed();
   void OnSelectedAlgorithmChanged();
+  void OnNodeSelectionChanged(QList<mitk::DataNode::Pointer> nodes);
 
   void OnStartRegBtnPushed();
   void OnStopRegBtnPushed();
@@ -128,6 +128,11 @@ private:
   */
   void ConfigureProgressInfos();
 
+  /**
+  Configure the node selectors predicates and informations according to the selected algorithm.
+  */
+  void ConfigureNodeSelectors();
+
   /** Methods returns a list of all nodes in the data manager containing a registration wrapper.
     * The list may be empty.*/
   mitk::DataStorage::SetOfObjects::Pointer GetRegNodes() const;
@@ -161,6 +166,9 @@ private:
   void UpdateAlgorithmSelection(berry::ISelection::ConstPointer selection);
 
   friend struct berry::SelectionChangedAdapter<QmitkMatchPoint>;
+
+  QWidget* m_Parent;
+
   /** @brief this pointer holds the algorithm selection listener */
   QScopedPointer<berry::ISelectionListener> m_AlgorithmSelectionListener;
 
@@ -199,7 +207,6 @@ private:
   bool m_ValidInputs;
   bool m_Working;
 
-  QWidget* m_Parent;
   Ui::MatchPointAdvancedControls m_Controls;
 };
 

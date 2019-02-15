@@ -54,7 +54,7 @@ int mitkB0ExtractionToSeparateImagesFilterTest(int  argc , char* argv[])
 
       DiffusionImageType* vols = dynamic_cast< DiffusionImageType* >(baseData.GetPointer());
 
-  MITK_TEST_CONDITION_REQUIRED( vols != NULL, "Casting basedata to diffusion image successfull." );
+  MITK_TEST_CONDITION_REQUIRED( vols != nullptr, "Casting basedata to diffusion image successfull." );
 
   // filter
   typedef itk::B0ImageExtractionToSeparateImageFilter< short, short> FilterType;
@@ -77,6 +77,7 @@ int mitkB0ExtractionToSeparateImagesFilterTest(int  argc , char* argv[])
 
   mitkImage->SetImportChannel( filter->GetOutput()->GetBufferPointer() );
 
+  mitk::LocaleSwitch localeSwitch("C");
   typedef itk::ImageFileWriter< FilterType::OutputImageType > itkImageWriterType;
   typename itkImageWriterType::Pointer itkWriter = itkImageWriterType::New();
 

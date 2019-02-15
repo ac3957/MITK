@@ -5,23 +5,26 @@ set(SRC_CPP_FILES
 
 set(INTERNAL_CPP_FILES
   mitkPluginActivator.cpp
-  
-  QmitkDiffusionRegistrationView.cpp
+
+  QmitkHeadMotionCorrectionView.cpp
+  QmitkSimpleRegistrationView.cpp
 )
 
 set(UI_FILES
-  src/internal/QmitkDiffusionRegistrationViewControls.ui
+  src/internal/QmitkHeadMotionCorrectionViewControls.ui
+  src/internal/QmitkSimpleRegistrationViewControls.ui
 )
 
 set(MOC_H_FILES
   src/internal/mitkPluginActivator.h
 
-  src/internal/QmitkDiffusionRegistrationView.h
+  src/internal/QmitkHeadMotionCorrectionView.h
+  src/internal/QmitkSimpleRegistrationView.h
 )
 
 set(CACHED_RESOURCE_FILES
   plugin.xml
-  
+
   resources/diffusionregistration.png
 )
 

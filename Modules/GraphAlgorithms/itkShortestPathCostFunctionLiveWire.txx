@@ -19,7 +19,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include "itkShortestPathCostFunctionLiveWire.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <itkCannyEdgeDetectionImageFilter.h>
 #include <itkCastImageFilter.h>
@@ -33,13 +33,8 @@ namespace itk
 {
   // Constructor
   template <class TInputImageType>
-  ShortestPathCostFunctionLiveWire<TInputImageType>::ShortestPathCostFunctionLiveWire()
+  ShortestPathCostFunctionLiveWire<TInputImageType>::ShortestPathCostFunctionLiveWire(): m_MinCosts(0.0), m_UseRepulsivePoints(false), m_GradientMax(0.0), m_Initialized(false),  m_UseCostMap(false), m_MaxMapCosts(-1.0)
   {
-    m_UseRepulsivePoints = false;
-    m_GradientMax = 0.0;
-    m_Initialized = false;
-    m_UseCostMap = false;
-    m_MaxMapCosts = -1.0;
   }
 
   template <class TInputImageType>
@@ -254,7 +249,7 @@ namespace itk
     nGradientAtP2[1] /= m_GradientMagnitudeImage->GetPixel(p2);
 
     double scalarProduct = (nGradientAtP1[0] * nGradientAtP2[0]) + (nGradientAtP1[1] * nGradientAtP2[1]);
-    if (abs(scalarProduct) >= 1.0)
+    if (std::abs(scalarProduct) >= 1.0)
     {
       // this should probably not happen; make sure the input for acos is valid
       scalarProduct = 0.999999999;
@@ -297,7 +292,7 @@ namespace itk
   template <class TInputImageType>
   double ShortestPathCostFunctionLiveWire<TInputImageType>::GetMinCost()
   {
-    return minCosts;
+    return m_MinCosts;
   }
 
   template <class TInputImageType>
@@ -373,7 +368,7 @@ namespace itk
       m_EdgeImage = cannyEdgeDetectionfilter->GetOutput();
 
       // set minCosts
-      minCosts = 0.0; // The lower, the more thouroughly! 0 = dijkstra. If estimate costs are lower than actual costs
+      m_MinCosts = 0.0; // The lower, the more thouroughly! 0 = dijkstra. If estimate costs are lower than actual costs
                       // everything is fine. If estimation is higher than actual costs, you might not get the shortest
                       // but a different path.
 

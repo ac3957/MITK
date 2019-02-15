@@ -53,21 +53,17 @@ public:
   itkGetMacro( OutputAbsoluteValues, bool)                      ///< output absolute values of the number of fibers per voxel
   itkSetMacro( UseImageGeometry, bool)                          ///< use input image geometry to initialize output image
   itkGetMacro( UseImageGeometry, bool)                          ///< use input image geometry to initialize output image
-  itkSetMacro( FiberBundle, mitk::FiberBundle::Pointer)        ///< input fiber bundle
+  itkSetMacro( FiberBundle, mitk::FiberBundle::Pointer)         ///< input fiber bundle
   itkSetMacro( InputImage, typename OutputImageType::Pointer)   ///< use input image geometry to initialize output image
-  itkSetMacro( UseTrilinearInterpolation, bool )
-  itkSetMacro( DoFiberResampling, bool )
-  itkSetMacro( WorkOnFiberCopy, bool )
   itkGetMacro( MaxDensity, OutPixelType)
+  itkGetMacro( NumCoveredVoxels, unsigned int)
 
-  void GenerateData();
+  void GenerateData() override;
 
 protected:
 
-  itk::Point<float, 3> GetItkPoint(double point[3]);
-
   TractDensityImageFilter();
-  virtual ~TractDensityImageFilter();
+  ~TractDensityImageFilter() override;
 
   typename OutputImageType::Pointer m_InputImage;           ///< use input image geometry to initialize output image
   mitk::FiberBundle::Pointer        m_FiberBundle;          ///< input fiber bundle
@@ -80,6 +76,7 @@ protected:
   bool                              m_DoFiberResampling;
   bool                              m_WorkOnFiberCopy;
   OutPixelType                      m_MaxDensity;
+  unsigned int                      m_NumCoveredVoxels;
 };
 
 }

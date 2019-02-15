@@ -39,7 +39,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 // mitk
 #include "mitkPartialVolumeAnalysisHistogramCalculator.h"
 #include "mitkPlanarLine.h"
-#include <mitkWeakPointer.h>
 #include "mitkDataStorageSelection.h"
 #include <mitkVtkLayerController.h>
 
@@ -61,13 +60,14 @@ public:
   /*!
   \  Convenient typedefs
   */
-  typedef mitk::DataStorage::SetOfObjects                ConstVector;
-  typedef ConstVector::ConstPointer                      ConstVectorPointer;
-  typedef ConstVector::ConstIterator                     ConstVectorIterator;
-  typedef mitk::PartialVolumeAnalysisHistogramCalculator HistogramCalculatorType;
-  typedef HistogramCalculatorType::HistogramType         HistogramType;
-  typedef mitk::PartialVolumeAnalysisClusteringCalculator ClusteringType;
-  typedef itk::DiffusionTensorPrincipalDirectionImageFilter<float,float> DirectionsFilterType;
+  typedef mitk::DataStorage::SetOfObjects                           ConstVector;
+  typedef ConstVector::ConstPointer                                 ConstVectorPointer;
+  typedef ConstVector::ConstIterator                                ConstVectorIterator;
+  typedef mitk::PartialVolumeAnalysisHistogramCalculator            HistogramCalculatorType;
+  typedef HistogramCalculatorType::HistogramType                    HistogramType;
+  typedef mitk::PartialVolumeAnalysisClusteringCalculator           ClusteringType;
+  typedef itk::DiffusionTensorPrincipalDirectionImageFilter<float>  DirectionsFilterType;
+  typedef itk::Image<unsigned char, 3>                              ItkUcharImgType;
 
   /*!
   \brief default constructor
@@ -113,7 +113,7 @@ public:
   virtual void NodeAddedInDataStorage(const mitk::DataNode* node);
 
   virtual void AddFigureToDataStorage(mitk::PlanarFigure* figure, const QString& name,
-    const char *propertyKey = NULL, mitk::BaseProperty *property = NULL );
+    const char *propertyKey = nullptr, mitk::BaseProperty *property = nullptr );
 
   void PlanarFigureInitialized();
 
@@ -177,7 +177,7 @@ protected:
   /** \brief Removes any cached images which are no longer referenced elsewhere. */
   void RemoveOrphanImages();
 
-  void Select( mitk::DataNode::Pointer node, bool clearMaskOnFirstArgNULL=false, bool clearImageOnFirstArgNULL=false );
+  void Select( mitk::DataNode::Pointer node, bool clearMaskOnFirstArgnullptr=false, bool clearImageOnFirstArgnullptr=false );
 
   void SetMeasurementInfoToRenderWindow(const QString& text);
 
@@ -219,7 +219,6 @@ protected:
   mitk::Image::Pointer m_RDImage;
   mitk::Image::Pointer m_ADImage;
   mitk::Image::Pointer m_MDImage;
-//  mitk::Image::Pointer m_DirectionImage;
   mitk::Image::Pointer m_DirectionComp1Image;
   mitk::Image::Pointer m_DirectionComp2Image;
   mitk::Image::Pointer m_AngularErrorImage;
@@ -246,14 +245,12 @@ protected:
   bool m_NumberBinsSliding;
   bool m_UpsamplingChangedSliding;
 
-  bool m_Visible;
-
   mitk::DataNode::Pointer m_ClusteringResult;
 
   int m_EllipseCounter;
   int m_RectangleCounter;
   int m_PolygonCounter;
-  unsigned int m_InitializedObserverTag;
+  long m_InitializedObserverTag;
   bool m_CurrentFigureNodeInitialized;
 
   int m_QuantifyClass;
@@ -261,12 +258,12 @@ protected:
   ClusteringType::HelperStructPerformRGBClusteringRetval* m_CurrentRGBClusteringResults;
   ClusteringType::HelperStructPerformClusteringRetval *m_CurrentPerformClusteringResults;
 
-//  mitk::DataNode::Pointer m_newnode;
-//  mitk::DataNode::Pointer m_newnode2;
   QIcon* m_IconTexOFF;
   QIcon* m_IconTexON;
   bool m_TexIsOn;
+
+  bool m_Visible;
 };
 
 
-#endif // !defined(QmitkPartialVolumeAnalysis_H__INCLUDED)
+#endif

@@ -21,11 +21,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <berryISelectionListener.h>
 
 #include <QmitkAbstractView.h>
+#include <QmitkSliceNavigationListener.h>
 
 #include "ui_QmitkCESTStatisticsViewControls.h"
-#include <QmitkImageStatisticsCalculationThread.h>
+#include <QmitkImageStatisticsCalculationJob.h>
 
 #include <mitkPointSet.h>
+
+#include <mitkIRenderWindowPartListener.h>
 
 /**
   \brief QmitkCESTStatisticsView
@@ -35,7 +38,7 @@ See LICENSE.txt or http://www.mitk.org for details.
   \sa QmitkAbstractView
   \ingroup ${plugin_target}_internal
 */
-class QmitkCESTStatisticsView : public QmitkAbstractView
+class QmitkCESTStatisticsView : public QmitkAbstractView, public mitk::IRenderWindowPartListener
 {
   // this is needed for all Qt objects that should have a Qt meta-object
   // (everything that derives from QObject and wants to have signal/slots)
@@ -60,17 +63,14 @@ class QmitkCESTStatisticsView : public QmitkAbstractView
     /// \brief takes care of processing the computed data
     void OnThreadedStatisticsCalculationEnds();
 
-    /// \brief copy statistics to clipboard
-    void OnCopyStatisticsToClipboardPushButtonClicked();
-
-    /// \brief normalize cest image
-    void OnNormalizeImagePushButtonClicked();
-
     /// \brief Toggle whether or not the plot uses a fixed x range
     void OnFixedRangeCheckBoxToggled(bool state);
 
     /// \brief Adapt axis scale when manual ranges are set
     void OnFixedRangeDoubleSpinBoxChanged();
+
+    /// \brief What to do if the crosshair moves
+    void OnSliceChanged();
 
   protected:
 
@@ -78,17 +78,12 @@ class QmitkCESTStatisticsView : public QmitkAbstractView
 
     virtual void SetFocus() override;
 
+    virtual void RenderWindowPartActivated(mitk::IRenderWindowPart* renderWindowPart);
+    virtual void RenderWindowPartDeactivated(mitk::IRenderWindowPart* renderWindowPart);
+
     /// \brief called by QmitkFunctionality when DataManager's selection has changed
     virtual void OnSelectionChanged( berry::IWorkbenchPart::Pointer source,
                                      const QList<mitk::DataNode::Pointer>& nodes ) override;
-
-    /** \brief  Writes the calculated statistics to the GUI */
-    void FillStatisticsTableView(const std::vector<mitk::ImageStatisticsCalculator::StatisticsContainer::Pointer> &s,
-      const mitk::Image *image);
-
-
-    /** \brief  Removes statistics from the GUI */
-    void InvalidateStatisticsTableView();
 
     /// parse string and set data vector returns true if succesfull
     bool SetZSpectrum(mitk::StringProperty* zSpectrumProperty);
@@ -121,12 +116,23 @@ class QmitkCESTStatisticsView : public QmitkAbstractView
     void CopyTimesteps(itk::Image<TPixel, VImageDimension>* image);
 
     Ui::QmitkCESTStatisticsViewControls m_Controls;
-    QmitkImageStatisticsCalculationThread* m_CalculatorThread;
+    QmitkImageStatisticsCalculationJob* m_CalculatorJob;
     QmitkPlotWidget::DataVector m_zSpectrum;
     mitk::Image::Pointer m_ZImage;
     mitk::Image::Pointer m_MaskImage;
     mitk::PlanarFigure::Pointer m_MaskPlanarFigure;
     mitk::PointSet::Pointer m_PointSet;
+    mitk::PointSet::Pointer m_CrosshairPointSet;
+
+    QmitkSliceNavigationListener m_SliceChangeListener;
+
+    itk::TimeStamp m_selectedNodeTime;
+    itk::TimeStamp m_currentPositionTime;
+    /** @brief currently valid selected position in the inspector*/
+    mitk::Point3D m_currentSelectedPosition;
+    /** @brief indicates if the currently selected position is valid for the currently selected fit.
+    * This it is within the input image */
+    unsigned int m_currentSelectedTimeStep;
 
 };
 

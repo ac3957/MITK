@@ -13,7 +13,9 @@
  See LICENSE.txt or http://www.mitk.org for details.
 
  ===================================================================*/
-#pragma warning (disable : 4996)
+#ifdef _MSC_VER
+#  pragma warning (disable : 4996)
+#endif
 
 #include "mitkDiffusionCollectionWriter.h"
 
@@ -99,7 +101,7 @@ bool mitk::DiffusionCollectionWriter::ExportCollectionToFolder(DataCollection *d
 
     // Herein create data folders
     DataCollection* subCollections = dynamic_cast<DataCollection*> (dataCollection->GetData(i).GetPointer());
-    if (subCollections == NULL)
+    if (subCollections == nullptr)
     {
       MITK_ERROR<< "mitk::DiffusionCollectionWriter::SaveCollectionToFolder: Container is illformed. Aborting";
       return false;
@@ -113,7 +115,7 @@ bool mitk::DiffusionCollectionWriter::ExportCollectionToFolder(DataCollection *d
       xmlFileStream << "  <" << DATA <<  " " << NAME << "=\"" << subCollections->IndexToName(d) << "\" " <<  FILEPATH << "=\"" << subCollections->GetDataFilePath(d) << "\" id=\"Data" << dataId << "\" >\n";
 
       DataCollection* itemCollections = dynamic_cast<DataCollection*> (subCollections->GetData(d).GetPointer());
-      if (itemCollections == NULL)
+      if (itemCollections == nullptr)
       {
         MITK_ERROR<< "mitk::DiffusionCollectionWriter::SaveCollectionToFolder: Container is illformed. Aborting";
         return false;
@@ -219,7 +221,7 @@ bool mitk::DiffusionCollectionWriter::SaveCollection(mitk::DataCollection *dataC
 
     // Herein create data folders
     DataCollection* subCollections = dynamic_cast<DataCollection*> (dataCollection->GetData(i).GetPointer());
-    if (subCollections == NULL)
+    if (subCollections == nullptr)
     {
       MITK_ERROR<< "mitk::DiffusionCollectionWriter::SaveCollectionToFolder: Container is illformed. Aborting";
       return false;
@@ -233,7 +235,7 @@ bool mitk::DiffusionCollectionWriter::SaveCollection(mitk::DataCollection *dataC
       xmlFileStream << "  <" << DATA <<  " " << NAME << "=\"" << subCollections->IndexToName(d) << "\" " <<  FILEPATH << "=\"" << subCollections->GetDataFilePath(d) << "\" id=\"Data" << dataId << "\" >\n";
 
       DataCollection* itemCollections = dynamic_cast<DataCollection*> (subCollections->GetData(d).GetPointer());
-      if (itemCollections == NULL)
+      if (itemCollections == nullptr)
       {
         MITK_ERROR<< "mitk::DiffusionCollectionWriter::SaveCollectionToFolder: Container is illformed. Aborting";
         return false;

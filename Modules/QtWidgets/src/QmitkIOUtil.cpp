@@ -43,7 +43,7 @@ struct QmitkIOUtil::Impl
 {
   struct ReaderOptionsDialogFunctor : public ReaderOptionsFunctorBase
   {
-    virtual bool operator()(LoadInfo &loadInfo) const override
+    bool operator()(LoadInfo &loadInfo) const override
     {
       QmitkFileReaderOptionsDialog dialog(loadInfo);
       if (dialog.exec() == QDialog::Accepted)
@@ -60,7 +60,7 @@ struct QmitkIOUtil::Impl
 
   struct WriterOptionsDialogFunctor : public WriterOptionsFunctorBase
   {
-    virtual bool operator()(SaveInfo &saveInfo) const override
+    bool operator()(SaveInfo &saveInfo) const override
     {
       QmitkFileWriterOptionsDialog dialog(saveInfo);
       if (dialog.exec() == QDialog::Accepted)
@@ -123,7 +123,7 @@ QList<mitk::BaseData::Pointer> QmitkIOUtil::Load(const QStringList &paths, QWidg
   }
 
   Impl::ReaderOptionsDialogFunctor optionsCallback;
-  std::string errMsg = Load(loadInfos, NULL, NULL, &optionsCallback);
+  std::string errMsg = Load(loadInfos, nullptr, nullptr, &optionsCallback);
   if (!errMsg.empty())
   {
     QMessageBox::warning(parent, "Error reading files", QString::fromStdString(errMsg));

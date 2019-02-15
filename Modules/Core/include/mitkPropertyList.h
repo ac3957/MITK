@@ -20,6 +20,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "mitkBaseProperty.h"
 #include "mitkGenericProperty.h"
 #include "mitkUIDGenerator.h"
+#include "mitkIPropertyOwner.h"
 #include <MitkCoreExports.h>
 
 #include <itkObjectFactory.h>
@@ -59,39 +60,42 @@ namespace mitk
    * method will try to change the value of an existing property and will
    * not allow you to replace e.g. a ColorProperty with an IntProperty.
    *
+   * Please also regard, that the key of a property must be a none empty string.
+   * This is a precondition. Setting properties with empty keys will raise an exception.
+   *
    * @ingroup DataManagement
    */
-  class MITKCORE_EXPORT PropertyList : public itk::Object
+  class MITKCORE_EXPORT PropertyList : public itk::Object, public IPropertyOwner
   {
   public:
     mitkClassMacroItkParent(PropertyList, itk::Object)
 
-      /**
-       * Method for creation through the object factory.
-       */
-      itkFactorylessNewMacro(Self) itkCloneMacro(Self)
+    /**
+     * Method for creation through the object factory.
+     */
+    itkFactorylessNewMacro(Self) itkCloneMacro(Self)
 
-      /**
-       * Map structure to hold the properties: the map key is a string,
-       * the value consists of the actual property object (BaseProperty).
-       */
-      typedef std::map<std::string, BaseProperty::Pointer> PropertyMap;
+    /**
+     * Map structure to hold the properties: the map key is a string,
+     * the value consists of the actual property object (BaseProperty).
+     */
+    typedef std::map<std::string, BaseProperty::Pointer> PropertyMap;
     typedef std::pair<std::string, BaseProperty::Pointer> PropertyMapElementType;
+
+    // IPropertyProvider
+    BaseProperty::ConstPointer GetConstProperty(const std::string &propertyKey, const std::string &contextName = "", bool fallBackOnDefaultContext = true) const override;
+    std::vector<std::string> GetPropertyKeys(const std::string &contextName = "", bool includeDefaultContext = false) const override;
+    std::vector<std::string> GetPropertyContextNames() const override;
+
+    // IPropertyOwner
+    BaseProperty * GetNonConstProperty(const std::string &propertyKey, const std::string &contextName = "", bool fallBackOnDefaultContext = true) override;
+    void SetProperty(const std::string &propertyKey, BaseProperty *property, const std::string &contextName = "", bool fallBackOnDefaultContext = false) override;
+    void RemoveProperty(const std::string &propertyKey, const std::string &contextName = "", bool fallBackOnDefaultContext = false) override;
 
     /**
      * @brief Get a property by its name.
      */
     mitk::BaseProperty *GetProperty(const std::string &propertyKey) const;
-
-    /**
-     * @brief Set a property in the list/map by value.
-     *
-     * The actual OBJECT holding the value of the property is not replaced, but its value
-     * is modified to match that of @a property. To really replace the object holding the
-     * property - which would make sense if you want to change the type (bool, string) of the property
-     * - call ReplaceProperty.
-     */
-    void SetProperty(const std::string &propertyKey, BaseProperty *property);
 
     /**
      * @brief Set a property object in the list/map by reference.
@@ -222,7 +226,7 @@ namespace mitk
      * @brief Get the timestamp of the last change of the map or the last change of one of
      * the properties store in the list (whichever is later).
      */
-    virtual unsigned long GetMTime() const override;
+    unsigned long GetMTime() const override;
 
     /**
      * @brief Remove a property from the list/map.
@@ -237,7 +241,7 @@ namespace mitk
     PropertyList();
     PropertyList(const PropertyList &other);
 
-    virtual ~PropertyList();
+    ~PropertyList() override;
 
     /**
      * @brief Map of properties.
@@ -245,7 +249,7 @@ namespace mitk
     PropertyMap m_Properties;
 
   private:
-    virtual itk::LightObject::Pointer InternalClone() const override;
+    itk::LightObject::Pointer InternalClone() const override;
   };
 
 } // namespace mitk

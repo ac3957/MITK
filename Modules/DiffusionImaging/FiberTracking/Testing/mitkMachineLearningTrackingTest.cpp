@@ -25,6 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkImageCast.h>
 #include <mitkImageToItk.h>
 #include <omp.h>
+#include <mitkTractographyForest.h>
 
 #include "mitkTestFixture.h"
 
@@ -35,7 +36,7 @@ class mitkMachineLearningTrackingTestSuite : public mitk::TestFixture
     MITK_TEST(Track1);
     CPPUNIT_TEST_SUITE_END();
 
-    typedef itk::Image<unsigned char, 3> ItkUcharImgType;
+    typedef itk::Image<float, 3> ItkFloatImgType;
 
 private:
 
@@ -43,34 +44,36 @@ private:
     mitk::FiberBundle::Pointer ref;
     mitk::TrackingHandlerRandomForest<6, 100>* tfh;
     mitk::Image::Pointer dwi;
-    ItkUcharImgType::Pointer seed;
+    ItkFloatImgType::Pointer seed;
 
 public:
 
     void setUp() override
     {
-        ref = NULL;
+        ref = nullptr;
         tfh = new mitk::TrackingHandlerRandomForest<6,100>();
 
         std::vector<mitk::BaseData::Pointer> fibInfile = mitk::IOUtil::Load(GetTestDataFilePath("DiffusionImaging/MachineLearningTracking/ReferenceTracts.fib"));
         mitk::BaseData::Pointer baseData = fibInfile.at(0);
         ref = dynamic_cast<mitk::FiberBundle*>(baseData.GetPointer());
 
-        dwi = dynamic_cast<mitk::Image*>(mitk::IOUtil::LoadImage(GetTestDataFilePath("DiffusionImaging/MachineLearningTracking/DiffusionImage.dwi")).GetPointer());
+        dwi = mitk::IOUtil::Load<mitk::Image>(GetTestDataFilePath("DiffusionImaging/MachineLearningTracking/DiffusionImage.dwi"));
 
 
-        mitk::Image::Pointer img = dynamic_cast<mitk::Image*>(mitk::IOUtil::LoadImage(GetTestDataFilePath("DiffusionImaging/MachineLearningTracking/seed.nrrd")).GetPointer());
-        seed = ItkUcharImgType::New();
+        mitk::Image::Pointer img = mitk::IOUtil::Load<mitk::Image>(GetTestDataFilePath("DiffusionImaging/MachineLearningTracking/seed.nrrd"));
+        seed = ItkFloatImgType::New();
         mitk::CastToItkImage(img, seed);
 
-        tfh->LoadForest(GetTestDataFilePath("DiffusionImaging/MachineLearningTracking/forest.rf"));
+        mitk::TractographyForest::Pointer forest = mitk::IOUtil::Load<mitk::TractographyForest>(GetTestDataFilePath("DiffusionImaging/MachineLearningTracking/forest.rf"));
+
+        tfh->SetForest(forest);
         tfh->AddDwi(dwi);
     }
 
     void tearDown() override
     {
         delete tfh;
-        ref = NULL;
+        ref = nullptr;
     }
 
     void Track1()
@@ -79,6 +82,7 @@ public:
         typedef itk::StreamlineTrackingFilter TrackerType;
         TrackerType::Pointer tracker = TrackerType::New();
         tracker->SetDemoMode(false);
+        tracker->SetInterpolateMasks(false);
         tracker->SetSeedImage(seed);
         tracker->SetSeedsPerVoxel(1);
         tracker->SetStepSize(-1);
@@ -86,7 +90,6 @@ public:
         tracker->SetMinTractLength(20);
         tracker->SetMaxTractLength(400);
         tracker->SetTrackingHandler(tfh);
-        tracker->SetAposterioriCurvCheck(false);
         tracker->SetAvoidStop(true);
         tracker->SetSamplingDistance(0.5);
         tracker->SetRandomSampling(false);
@@ -95,7 +98,8 @@ public:
         mitk::FiberBundle::Pointer outFib = mitk::FiberBundle::New(poly);
 
         //MITK_INFO << mitk::IOUtil::GetTempPath() << "ReferenceTracts.fib";
-        //mitk::IOUtil::Save(outFib, mitk::IOUtil::GetTempPath()+"ReferenceTracts.fib");
+        if (!ref->Equals(outFib))
+          mitk::IOUtil::Save(outFib, mitk::IOUtil::GetTempPath()+"ML_Track1.fib");
 
         CPPUNIT_ASSERT_MESSAGE("Should be equal", ref->Equals(outFib));
     }

@@ -57,7 +57,7 @@ namespace mitk
      * @param image the image which is used for initializing the mitk::LabelSetImage
      */
     using mitk::Image::Initialize;
-    virtual void Initialize(const mitk::Image *image) override;
+    void Initialize(const mitk::Image *image) override;
 
     /**
       * \brief  */
@@ -140,20 +140,20 @@ namespace mitk
      * @brief Returns the mitk::Label with the given pixelValue and for the given layer
      * @param pixelValue the pixel value of the label
      * @param layer the layer in which the labels should be located
-     * @return the mitk::Label if available otherwise NULL
+     * @return the mitk::Label if available otherwise nullptr
      */
     mitk::Label *GetLabel(PixelType pixelValue, unsigned int layer = 0) const;
 
     /**
      * @brief Returns the currently active mitk::LabelSet
-     * @return the mitk::LabelSet of the active layer or NULL if non is present
+     * @return the mitk::LabelSet of the active layer or nullptr if non is present
      */
     mitk::LabelSet *GetActiveLabelSet();
 
     /**
      * @brief Gets the mitk::LabelSet for the given layer
      * @param layer the layer for which the mitk::LabelSet should be retrieved
-     * @return the respective mitk::LabelSet or NULL if non exists for the given layer
+     * @return the respective mitk::LabelSet or nullptr if non exists for the given layer
      */
     mitk::LabelSet *GetLabelSet(unsigned int layer = 0);
     const mitk::LabelSet *GetLabelSet(unsigned int layer = 0) const;
@@ -271,7 +271,7 @@ namespace mitk
 
       LabelSetImage();
     LabelSetImage(const LabelSetImage &other);
-    virtual ~LabelSetImage();
+    ~LabelSetImage() override;
 
     template <typename ImageType1, typename ImageType2>
     void ChangeLayerProcessing(ImageType1 *source, ImageType2 *target);

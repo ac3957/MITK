@@ -12,7 +12,6 @@
 #!     PACKAGE_DEPENDS
 #!       PRIVATE Qt5|Xml+Networking
 #!       PUBLIC  ITK|Watershed
-#!     WARNINGS_AS_ERRORS
 #! \endcode
 #!
 #! The <moduleName> parameter specifies the name of the module which is used
@@ -64,6 +63,7 @@
 #!
 #! Multi-value Parameters (all optional):
 #!
+
 #! \param SUBPROJECTS List of CDash labels
 #! \param INCLUDE_DIRS Include directories for this module:
 #!        \verbatim
@@ -95,7 +95,7 @@
 #!        symbols will be exported
 #! \param NO_INIT Do not create CppMicroServices initialization code
 #! \param NO_FEATURE_INFO Do not create a feature info by calling add_feature_info()
-#! \param WARNINGS_AS_ERRORS Treat compiler warnings as errors
+#! \param WARNINGS_NO_ERRORS Do not treat compiler warnings as errors
 #
 ##################################################################
 function(mitk_create_module)
@@ -131,7 +131,7 @@ function(mitk_create_module)
       NO_DEFAULT_INCLUDE_DIRS # do not add default include directories like "include" or "."
       NO_INIT                # do not create CppMicroServices initialization code
       NO_FEATURE_INFO        # do not create a feature info by calling add_feature_info()
-      WARNINGS_AS_ERRORS     # treat all compiler warnings as errors
+      WARNINGS_NO_ERRORS     # do not treat compiler warnings as errors
       EXECUTABLE             # create an executable; do not use directly, use mitk_create_executable() instead
       C_MODULE               # compile all source files as C sources
       CXX_MODULE             # compile all source files as C++ sources
@@ -191,6 +191,8 @@ function(mitk_create_module)
   if(NOT MODULE_SUBPROJECTS)
     if(MITK_DEFAULT_SUBPROJECTS)
       set(MODULE_SUBPROJECTS ${MITK_DEFAULT_SUBPROJECTS})
+    elseif(TARGET MITK-Modules)
+      set(MODULE_SUBPROJECTS MITK-Modules)
     endif()
   endif()
 
@@ -339,9 +341,14 @@ function(mitk_create_module)
       set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
     endif()
 
-    if(MODULE_WARNINGS_AS_ERRORS)
+    if(NOT MODULE_WARNINGS_NO_ERRORS)
       if(MSVC_VERSION)
         mitkFunctionCheckCAndCXXCompilerFlags("/WX" module_c_flags module_cxx_flags)
+	# this would turn on unused parameter warnings, but unfortunately MSVC cannot
+	# distinguish yet between internal and external headers so this would be triggered
+	# a lot by external code. There is support for it on the way so this line could be
+	# reactivated after https://gitlab.kitware.com/cmake/cmake/issues/17904 has been fixed.
+        # mitkFunctionCheckCAndCXXCompilerFlags("/w34100" module_c_flags module_cxx_flags)
       else()
         mitkFunctionCheckCAndCXXCompilerFlags(-Werror module_c_flags module_cxx_flags)
 
@@ -363,9 +370,10 @@ function(mitk_create_module)
         mitkFunctionCheckCAndCXXCompilerFlags("-Wno-error=static-member-init" module_c_flags module_cxx_flags)
         mitkFunctionCheckCAndCXXCompilerFlags("-Wno-error=unknown-warning" module_c_flags module_cxx_flags)
         mitkFunctionCheckCAndCXXCompilerFlags("-Wno-error=gnu" module_c_flags module_cxx_flags)
+        mitkFunctionCheckCAndCXXCompilerFlags("-Wno-error=class-memaccess" module_c_flags module_cxx_flags)
         mitkFunctionCheckCAndCXXCompilerFlags("-Wno-error=inconsistent-missing-override" module_c_flags module_cxx_flags)
       endif()
-    endif(MODULE_WARNINGS_AS_ERRORS)
+    endif()
 
     if(MODULE_FORCE_STATIC)
       set(_STATIC STATIC)
@@ -487,10 +495,6 @@ function(mitk_create_module)
       endif()
 
       set_property(TARGET ${MODULE_TARGET} PROPERTY US_MODULE_NAME ${_us_module_name})
-
-      if(MINGW)
-        target_link_libraries(${MODULE_TARGET} ssp) # add stack smash protection lib
-      endif()
 
       # Add additional library search directories to a global property which
       # can be evaluated by other CMake macros, e.g. our install scripts.

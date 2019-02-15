@@ -20,6 +20,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "src/internal/QmitkTensorReconstructionView.h"
 #include "src/internal/QmitkDiffusionQuantificationView.h"
 #include "src/internal/QmitkODFDetailsView.h"
+#include "src/internal/Perspectives/QmitkReconstructionPerspective.h"
+#include "src/internal/Perspectives/QmitkQuantificationPerspective.h"
 
 ctkPluginContext* mitk::PluginActivator::m_Context = nullptr;
 
@@ -30,6 +32,9 @@ ctkPluginContext* mitk::PluginActivator::GetContext()
 
 void mitk::PluginActivator::start(ctkPluginContext* context)
 {
+  BERRY_REGISTER_EXTENSION_CLASS(QmitkReconstructionPerspective, context)
+  BERRY_REGISTER_EXTENSION_CLASS(QmitkQuantificationPerspective, context)
+
   BERRY_REGISTER_EXTENSION_CLASS(QmitkQBallReconstructionView, context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkDiffusionQuantificationView, context)
   BERRY_REGISTER_EXTENSION_CLASS(QmitkTensorReconstructionView, context)

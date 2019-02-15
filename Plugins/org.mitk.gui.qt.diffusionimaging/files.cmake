@@ -5,23 +5,26 @@ set(INTERNAL_CPP_FILES
   mitkPluginActivator.cpp
   QmitkDiffusionDicomImportView.cpp
   QmitkControlVisualizationPropertiesView.cpp
+  QmitkDicomTractogramTagEditorView.cpp
 
-  Perspectives/QmitkDiffusionImagingAppPerspective.cpp
   Perspectives/QmitkDiffusionDefaultPerspective.cpp
+  Perspectives/QmitkSegmentationPerspective.cpp
 )
 
 set(UI_FILES
   src/internal/QmitkDiffusionDicomImportViewControls.ui
   src/internal/QmitkControlVisualizationPropertiesViewControls.ui
+  src/internal/QmitkDicomTractogramTagEditorViewControls.ui
 )
 
 set(MOC_H_FILES
   src/internal/mitkPluginActivator.h
   src/internal/QmitkDiffusionDicomImportView.h
   src/internal/QmitkControlVisualizationPropertiesView.h
-  
-  src/internal/Perspectives/QmitkDiffusionImagingAppPerspective.h
+  src/internal/QmitkDicomTractogramTagEditorView.h
+
   src/internal/Perspectives/QmitkDiffusionDefaultPerspective.h
+  src/internal/Perspectives/QmitkSegmentationPerspective.h
 )
 
 set(CACHED_RESOURCE_FILES
@@ -35,10 +38,14 @@ set(CACHED_RESOURCE_FILES
   resources/vizControls.png
   resources/arrow.png
   resources/dwi.png
-  resources/qball.png
+  resources/odf.png
   resources/tensor.png
   resources/tractogram.png
+  resources/odf_peaks.png
+  resources/ml_tractogram.png
+  resources/sh.png
   resources/refresh.xpm
+  resources/segmentation.svg
  )
 
 set(QRC_FILES

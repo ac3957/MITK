@@ -31,8 +31,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkPoints.h>
 #include <vtkPolyLine.h>
 
-using namespace std;
-
 namespace itk{
 
 /**
@@ -42,41 +40,44 @@ class FibersFromPlanarFiguresFilter : public ProcessObject
 {
 public:
 
-    typedef FibersFromPlanarFiguresFilter Self;
-    typedef ProcessObject                                       Superclass;
-    typedef SmartPointer< Self >                                Pointer;
-    typedef SmartPointer< const Self >                          ConstPointer;
-    typedef mitk::FiberBundle::Pointer                         FiberType;
-    typedef vector< mitk::FiberBundle::Pointer >               FiberContainerType;
+  typedef FibersFromPlanarFiguresFilter Self;
+  typedef ProcessObject                                       Superclass;
+  typedef SmartPointer< Self >                                Pointer;
+  typedef SmartPointer< const Self >                          ConstPointer;
+  typedef mitk::FiberBundle::Pointer                          FiberType;
+  typedef std::vector< mitk::FiberBundle::Pointer >           FiberContainerType;
 
-    itkFactorylessNewMacro(Self)
-    itkCloneMacro(Self)
-    itkTypeMacro( FibersFromPlanarFiguresFilter, ProcessObject )
+  itkFactorylessNewMacro(Self)
+  itkCloneMacro(Self)
+  itkTypeMacro( FibersFromPlanarFiguresFilter, ProcessObject )
 
-    virtual void Update() override{
-        this->GenerateData();
-    }
+  void Update() override{
+    this->GenerateData();
+  }
 
-    // input
-    void SetParameters( FiberGenerationParameters param )  ///< Simulation parameters.
-    {
-        m_Parameters = param;
-    }
+  // input
+  void SetParameters( FiberGenerationParameters param )  ///< Simulation parameters.
+  {
+    m_Parameters = param;
+  }
 
-    // output
-    FiberContainerType GetFiberBundles(){ return m_FiberBundles; }
+  // output
+  FiberContainerType GetFiberBundles(){ return m_FiberBundles; }
+
+  void SetFixSeed(bool FixSeed);
 
 protected:
 
-    void GenerateData() override;
+  void GenerateData() override;
 
-    FibersFromPlanarFiguresFilter();
-    virtual ~FibersFromPlanarFiguresFilter();
-    void GeneratePoints();
+  FibersFromPlanarFiguresFilter();
+  ~FibersFromPlanarFiguresFilter() override;
+  void GeneratePoints();
 
-    FiberContainerType              m_FiberBundles;    ///< container for the output fiber bundles
-    vector< mitk::Vector2D >        m_2DPoints;        ///< container for the 2D fiber waypoints
-    FiberGenerationParameters       m_Parameters;
+  FiberContainerType              m_FiberBundles;    ///< container for the output fiber bundles
+  std::vector< mitk::Vector2D >   m_2DPoints;        ///< container for the 2D fiber waypoints
+  FiberGenerationParameters       m_Parameters;
+  bool                            m_FixSeed;
 };
 }
 

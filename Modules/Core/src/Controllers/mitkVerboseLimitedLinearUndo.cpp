@@ -37,6 +37,13 @@ bool mitk::VerboseLimitedLinearUndo::SetOperationEvent(UndoStackItem *undoStackI
     InvokeEvent(RedoEmptyEvent());
   }
 
+  std::size_t undoLimit = this->GetUndoLimit();
+  if (0 != undoLimit && m_UndoList.size() == undoLimit)
+  {
+    auto item = m_UndoList.front();
+    m_UndoList.pop_front();
+    delete item;
+  }
   m_UndoList.push_back(undoStackItem);
 
   InvokeEvent(UndoNotEmptyEvent());

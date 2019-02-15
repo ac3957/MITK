@@ -130,9 +130,6 @@ void mitk::PlanarFigureReader::GenerateData()
   for (TiXmlElement *pfElement = document.FirstChildElement("PlanarFigure"); pfElement != nullptr;
        pfElement = pfElement->NextSiblingElement("PlanarFigure"))
   {
-    if (pfElement == nullptr)
-      continue;
-
     std::string type = pfElement->Attribute("type");
 
     mitk::PlanarFigure::Pointer planarFigure = nullptr;
@@ -218,7 +215,7 @@ void mitk::PlanarFigureReader::GenerateData()
 
       for (auto iter = readers.cbegin(); iter != readers.cend(); ++iter)
       {
-        if (BasePropertySerializer *reader = dynamic_cast<BasePropertySerializer *>(iter->GetPointer()))
+        if (auto *reader = dynamic_cast<BasePropertySerializer *>(iter->GetPointer()))
         {
           const BaseProperty::Pointer property = reader->Deserialize(propertyElement->FirstChildElement());
           if (property.IsNotNull())
@@ -242,7 +239,7 @@ void mitk::PlanarFigureReader::GenerateData()
 
     // Which features (length or circumference etc) a figure has is decided by whether it is closed or not
     // the function SetClosed has to be called in case of PlanarPolygons to ensure they hold the correct feature
-    PlanarPolygon *planarPolygon = dynamic_cast<PlanarPolygon *>(planarFigure.GetPointer());
+    auto *planarPolygon = dynamic_cast<PlanarPolygon *>(planarFigure.GetPointer());
     if (planarPolygon != nullptr)
     {
       bool isClosed = false;
@@ -311,8 +308,6 @@ void mitk::PlanarFigureReader::GenerateData()
       for (TiXmlElement *vertElement = cpElement->FirstChildElement("Vertex"); vertElement != nullptr;
            vertElement = vertElement->NextSiblingElement("Vertex"))
       {
-        if (vertElement == nullptr)
-          continue;
         int id = 0;
         mitk::Point2D::ValueType x = 0.0;
         mitk::Point2D::ValueType y = 0.0;
@@ -419,7 +414,7 @@ int mitk::PlanarFigureReader::CanReadFile(const char *name)
   // TiXmlDocument document(name);
   // if (document.LoadFile() == false)
   //  return false;
-  // return (document.FirstChildElement("PlanarFigure") != NULL);
+  // return (document.FirstChildElement("PlanarFigure") != nullptr);
 }
 
 bool mitk::PlanarFigureReader::CanReadFile(const std::string filename, const std::string, const std::string)
@@ -433,7 +428,7 @@ bool mitk::PlanarFigureReader::CanReadFile(const std::string filename, const std
   // TiXmlDocument document(filename);
   // if (document.LoadFile() == false)
   //  return false;
-  // return (document.FirstChildElement("PlanarFigure") != NULL);
+  // return (document.FirstChildElement("PlanarFigure") != nullptr);
 }
 
 void mitk::PlanarFigureReader::ResizeOutputs(const unsigned int &num)

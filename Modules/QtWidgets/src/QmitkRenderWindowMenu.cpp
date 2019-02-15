@@ -23,7 +23,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <QPainter>
 #include <QSize>
 #include <QSpacerItem>
-
+#include <QSlider>
 #include <QAction>
 #include <QGroupBox>
 #include <QLabel>
@@ -43,14 +43,16 @@ See LICENSE.txt or http://www.mitk.org for details.
 //#include"iconVertiSplit.xpm"
 #include "iconLeaveFullScreen.xpm"
 
-#include <math.h>
+#include <cmath>
+
+unsigned int QmitkRenderWindowMenu::m_DefaultThickMode(1);
 
 #ifdef QMITK_USE_EXTERNAL_RENDERWINDOW_MENU
 QmitkRenderWindowMenu::QmitkRenderWindowMenu(QWidget *parent,
-                                             Qt::WindowFlags f,
+                                             Qt::WindowFlags,
                                              mitk::BaseRenderer *b,
                                              QmitkStdMultiWidget *mw)
-  : QWidget(NULL, Qt::Tool | Qt::FramelessWindowHint),
+  : QWidget(nullptr, Qt::Tool | Qt::FramelessWindowHint),
 
 #else
 QmitkRenderWindowMenu::QmitkRenderWindowMenu(QWidget *parent,
@@ -60,8 +62,8 @@ QmitkRenderWindowMenu::QmitkRenderWindowMenu(QWidget *parent,
   : QWidget(parent, f),
 #endif
 
-    m_Settings(NULL),
-    m_CrosshairMenu(NULL),
+    m_Settings(nullptr),
+    m_CrosshairMenu(nullptr),
     m_Layout(0),
     m_LayoutDesign(0),
     m_OldLayoutDesign(0),
@@ -71,18 +73,16 @@ QmitkRenderWindowMenu::QmitkRenderWindowMenu(QWidget *parent,
     m_MultiWidget(mw),
     m_Parent(parent)
 {
-  MITK_DEBUG << "creating renderwindow menu on baserenderer " << b;
-
   // Create Menu Widget
   this->CreateMenuWidget();
   this->setMinimumWidth(61); // DIRTY.. If you add or remove a button, you need to change the size.
   this->setMaximumWidth(61);
   this->setAutoFillBackground(true);
 
-// Else part fixes the render window menu issue on Linux bug but caused bugs on Mac OS and Windows
-// for Mac OS see bug 3192
+// Else part fixes the render window menu issue on Linux bug but caused bugs on macOS and Windows
+// for macOS see bug 3192
 // for Windows see bug 12130
-//... so Mac OS and Windows must be treated differently:
+//... so macOS and Windows must be treated differently:
 #if defined(Q_OS_MAC)
   this->show();
   this->setWindowOpacity(0.0f);
@@ -272,10 +272,10 @@ void QmitkRenderWindowMenu::enterEvent(QEvent * /*e*/)
 void QmitkRenderWindowMenu::DeferredHideMenu()
 {
   MITK_DEBUG << "menu deferredhidemenu";
-// Else part fixes the render window menu issue on Linux bug but caused bugs on Mac OS and Windows
-// for Mac OS see bug 3192
+// Else part fixes the render window menu issue on Linux bug but caused bugs on macOS and Windows
+// for macOS see bug 3192
 // for Windows see bug 12130
-//... so Mac OS and Windows must be treated differently:
+//... so macOS and Windows must be treated differently:
 #if defined(Q_OS_MAC)
   this->setWindowOpacity(0.0f);
 #else
@@ -364,7 +364,7 @@ void QmitkRenderWindowMenu::OnFullScreenButton(bool /*checked*/)
 /// \brief
 void QmitkRenderWindowMenu::OnSettingsButton(bool /*checked*/)
 {
-  if (m_Settings == NULL)
+  if (m_Settings == nullptr)
     this->CreateSettingsWidget();
 
   QPoint point = this->mapToGlobal(m_SettingsButton->geometry().topLeft());
@@ -411,10 +411,10 @@ void QmitkRenderWindowMenu::DeferredShowMenu()
   MITK_DEBUG << "deferred show menu";
   m_HideTimer.stop();
 
-// Else part fixes the render window menu issue on Linux bug but caused bugs on Mac OS and Windows
-// for Mac OS see bug 3192
+// Else part fixes the render window menu issue on Linux bug but caused bugs on macOS and Windows
+// for macOS see bug 3192
 // for Windows see bug 12130
-//... so Mac OS and Windows must be treated differently:
+//... so macOS and Windows must be treated differently:
 #if defined(Q_OS_MAC)
   this->setWindowOpacity(1.0f);
 #else
@@ -531,7 +531,7 @@ void QmitkRenderWindowMenu::UpdateLayoutDesignList(int layoutDesignIndex)
 {
   m_LayoutDesign = layoutDesignIndex;
 
-  if (m_Settings == NULL)
+  if (m_Settings == nullptr)
     this->CreateSettingsWidget();
 
   switch (m_LayoutDesign)
@@ -797,24 +797,35 @@ void QmitkRenderWindowMenu::OnTSNumChanged(int num)
 
   if (m_Renderer.IsNotNull())
   {
-    if (num == 0)
+    unsigned int thickSlicesMode = 0;
+    // determine the state of the thick-slice mode
+    mitk::ResliceMethodProperty *resliceMethodEnumProperty = nullptr;
+
+    if(m_Renderer->GetCurrentWorldPlaneGeometryNode()->GetProperty(resliceMethodEnumProperty, "reslice.thickslices") && resliceMethodEnumProperty)
     {
-      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices",
-                                                                  mitk::ResliceMethodProperty::New(0));
-      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices.num",
-                                                                  mitk::IntProperty::New(num));
-      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices.showarea",
-                                                                  mitk::BoolProperty::New(false));
+      thickSlicesMode = resliceMethodEnumProperty->GetValueAsId();
+      if(thickSlicesMode!=0)
+        m_DefaultThickMode = thickSlicesMode;
     }
-    else
+
+    if(thickSlicesMode==0 && num>0) //default mode only for single slices
     {
-      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices",
-                                                                  mitk::ResliceMethodProperty::New(1));
-      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices.num",
-                                                                  mitk::IntProperty::New(num));
+      thickSlicesMode = m_DefaultThickMode; //mip default
       m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices.showarea",
                                                                   mitk::BoolProperty::New(true));
     }
+    if(num<1)
+    {
+      thickSlicesMode = 0;
+      m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices.showarea",
+                                                                  mitk::BoolProperty::New(false));
+    }
+
+    m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices",
+                                                                mitk::ResliceMethodProperty::New(thickSlicesMode));
+    m_Renderer->GetCurrentWorldPlaneGeometryNode()->SetProperty("reslice.thickslices.num",
+                                                                mitk::IntProperty::New(num));
+
     m_TSLabel->setText(QString::number(num * 2 + 1));
     m_Renderer->SendUpdateSlice();
     m_Renderer->GetRenderingManager()->RequestUpdateAll();
@@ -846,21 +857,21 @@ void QmitkRenderWindowMenu::OnCrossHairMenuAboutToShow()
         if (n)
         {
           bool v;
-          if (n->GetVisibility(v, 0))
+          if (n->GetVisibility(v, nullptr))
             currentState &= v;
         }
         n = this->m_MultiWidget->GetWidgetPlane2();
         if (n)
         {
           bool v;
-          if (n->GetVisibility(v, 0))
+          if (n->GetVisibility(v, nullptr))
             currentState &= v;
         }
         n = this->m_MultiWidget->GetWidgetPlane3();
         if (n)
         {
           bool v;
-          if (n->GetVisibility(v, 0))
+          if (n->GetVisibility(v, nullptr))
             currentState &= v;
         }
       }
@@ -959,10 +970,6 @@ void QmitkRenderWindowMenu::OnCrossHairMenuAboutToShow()
       if (m.IsNotNull())
       {
         currentNum = m->GetValue();
-        if (currentNum < 1)
-          currentNum = 1;
-        if (currentNum > 10)
-          currentNum = 10;
       }
     }
 
@@ -971,7 +978,7 @@ void QmitkRenderWindowMenu::OnCrossHairMenuAboutToShow()
 
     QSlider *m_TSSlider = new QSlider(crosshairModesMenu);
     m_TSSlider->setMinimum(0);
-    m_TSSlider->setMaximum(9);
+    m_TSSlider->setMaximum(50);
     m_TSSlider->setValue(currentNum);
 
     m_TSSlider->setOrientation(Qt::Horizontal);

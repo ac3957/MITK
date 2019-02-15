@@ -22,16 +22,7 @@ set(ITK_DEPENDS ${proj})
 
 if(NOT DEFINED ITK_DIR)
 
-  set(additional_cmake_args )
-  if(MINGW)
-    set(additional_cmake_args
-        -DCMAKE_USE_WIN32_THREADS:BOOL=ON
-        -DCMAKE_USE_PTHREADS:BOOL=OFF)
-  endif()
-
-  list(APPEND additional_cmake_args
-       -DUSE_WRAP_ITK:BOOL=OFF
-      )
+  set(additional_cmake_args -DUSE_WRAP_ITK:BOOL=OFF)
 
   if(MITK_USE_OpenCV)
     list(APPEND additional_cmake_args
@@ -46,6 +37,8 @@ if(NOT DEFINED ITK_DIR)
     -DModule_ITKReview:BOOL=ON
   # for 4.7, the OpenJPEG is needed by review but the variable must be set
     -DModule_ITKOpenJPEG:BOOL=ON
+  # Added Module for Wavelets
+    -DModule_IsotropicWavelets:BOOL=ON
   )
 
   if(CTEST_USE_LAUNCHERS)
@@ -56,10 +49,8 @@ if(NOT DEFINED ITK_DIR)
 
   ExternalProject_Add(${proj}
      LIST_SEPARATOR ${sep}
-     URL ${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}/InsightToolkit-4.9.0.tar.xz
-     URL_MD5 0ce83c0f3c08f8ee992675fca4401572
-     # work with external GDCM
-     PATCH_COMMAND ${PATCH_COMMAND} -N -p1 -i ${CMAKE_CURRENT_LIST_DIR}/ITK-4.9.0.patch
+     URL ${MITK_THIRDPARTY_DOWNLOAD_PREFIX_URL}/InsightToolkit-4.13.1.tar.xz
+     URL_MD5 bc7296e7faccdcb5656a7669d4d875d2
      CMAKE_GENERATOR ${gen}
      CMAKE_ARGS
        ${ep_common_args}
@@ -67,6 +58,8 @@ if(NOT DEFINED ITK_DIR)
        -DBUILD_EXAMPLES:BOOL=OFF
        -DITK_USE_SYSTEM_GDCM:BOOL=ON
        -DGDCM_DIR:PATH=${GDCM_DIR}
+       -DITK_USE_SYSTEM_HDF5:BOOL=ON
+       -DHDF5_DIR:PATH=${HDF5_DIR}
      CMAKE_CACHE_ARGS
        ${ep_common_cache_args}
      CMAKE_CACHE_DEFAULT_ARGS

@@ -20,13 +20,13 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <tinyxml.h>
 
-#include <boost/lexical_cast.hpp>
+#include <mitkLexicalCast.h>
 
 TiXmlElement *mitk::ProportionalTimeGeometryToXML::ToXML(const ProportionalTimeGeometry *timeGeom)
 {
   assert(timeGeom);
 
-  TiXmlElement *timeGeomElem = new TiXmlElement("ProportionalTimeGeometry");
+  auto *timeGeomElem = new TiXmlElement("ProportionalTimeGeometry");
   timeGeomElem->SetAttribute("NumberOfTimeSteps", timeGeom->CountTimeSteps());
   // TinyXML cannot serialize infinity (default value for time step)
   // So we guard this value and the first time point against serialization problems

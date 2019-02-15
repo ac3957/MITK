@@ -18,6 +18,8 @@ set(CPP_FILES
 
   mitkDiffusionIOMimeTypes.cpp
 
+  mitkFiberBundleDicomReader.cpp
+  mitkFiberBundleDicomWriter.cpp
   mitkFiberBundleTckReader.cpp
   mitkFiberBundleTrackVisReader.cpp
   mitkFiberBundleTrackVisWriter.cpp
@@ -26,6 +28,12 @@ set(CPP_FILES
   mitkFiberBundleSerializer.cpp
   mitkFiberBundleMapper2D.cpp
   mitkFiberBundleMapper3D.cpp
+  mitkPeakImageMapper2D.cpp
+  mitkPeakImageMapper3D.cpp
+
+  mitkTractographyForestReader.cpp
+  mitkTractographyForestWriter.cpp
+  mitkTractographyForestSerializer.cpp
 
   mitkPlanarFigureCompositeWriter.cpp
   mitkPlanarFigureCompositeReader.cpp

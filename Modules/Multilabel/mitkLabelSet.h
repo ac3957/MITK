@@ -169,6 +169,8 @@ namespace mitk
     */
     void RemoveAllLabels();
 
+    void SetNextActiveLabel();
+
     /** \brief
     */
     Label *GetActiveLabel() { return GetLabel(m_ActiveLabelValue); }
@@ -199,7 +201,7 @@ namespace mitk
 
     mitkCloneMacro(Self)
 
-      virtual ~LabelSet();
+      ~LabelSet() override;
 
     void PrintSelf(std::ostream &os, itk::Indent indent) const override;
 

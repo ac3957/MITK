@@ -28,7 +28,11 @@ void mitk::ArbitraryTimeGeometry::Initialize()
 {
   this->ClearAllGeometries();
   Geometry3D::Pointer geo = Geometry3D::New();
+  geo->Initialize();
+
   this->AppendNewTimeStep(geo, 0, 1);
+
+  Update();
 }
 
 mitk::TimeStepType mitk::ArbitraryTimeGeometry::CountTimeSteps() const
@@ -136,7 +140,7 @@ mitk::BaseGeometry::Pointer mitk::ArbitraryTimeGeometry::GetGeometryForTimeStep(
   }
   else
   {
-    return 0;
+    return nullptr;
   }
 }
 
@@ -150,7 +154,7 @@ mitk::BaseGeometry::Pointer
   }
   else
   {
-    return 0;
+    return nullptr;
   }
 }
 
@@ -158,7 +162,7 @@ mitk::BaseGeometry::Pointer
   mitk::ArbitraryTimeGeometry::GetGeometryCloneForTimeStep( TimeStepType timeStep ) const
 {
   if ( timeStep >= m_GeometryVector.size() )
-    return 0;
+    return nullptr;
   return m_GeometryVector[timeStep]->Clone();
 }
 
@@ -241,7 +245,7 @@ void mitk::ArbitraryTimeGeometry::AppendNewTimeStep(BaseGeometry *geometry,
 {
   if ( !geometry )
   {
-    mitkThrow() << "Cannot append geometry to time geometry. Invalid geometry passed (NULL pointer).";
+    mitkThrow() << "Cannot append geometry to time geometry. Invalid geometry passed (nullptr pointer).";
   }
 
   if (maximumTimePoint < minimumTimePoint)

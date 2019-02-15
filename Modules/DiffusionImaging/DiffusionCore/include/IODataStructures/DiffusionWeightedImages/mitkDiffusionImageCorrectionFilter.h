@@ -36,11 +36,7 @@ public:
   itkSimpleNewMacro(Self)
 
   typedef short DiffusionPixelType;
-  typedef vnl_vector_fixed< double, 3 >      GradientDirectionType;
   typedef vnl_matrix_fixed< double, 3, 3 >   TransformMatrixType;
-  typedef itk::VectorContainer< unsigned int, GradientDirectionType >
-                                             GradientDirectionContainerType;
-  typedef GradientDirectionContainerType::Pointer GradientDirectionContainerPointerType;
 
   typedef std::vector< TransformMatrixType >  TransformsVectorType;
 
@@ -71,12 +67,12 @@ public:
    */
   void CorrectDirections( const TransformMatrixType& );
 
-  virtual void GenerateOutputInformation() override {}
+  void GenerateOutputInformation() override {}
 
 
 protected:
   DiffusionImageCorrectionFilter();
-  virtual ~DiffusionImageCorrectionFilter() {}
+  ~DiffusionImageCorrectionFilter() override {}
 
   /**
    * @brief Get the rotation component following the Finite Strain
